@@ -1,452 +1,388 @@
-/**
- * Consulta los estados financieros de una empresa por su símbolo.
- * @param {string} symbol - El símbolo de la empresa (ej: AAPL, MSFT).
- * @returns {Promise<Object>} - Objeto con incomeStatementHistory, balanceSheetHistory y cashflowStatementHistory.
- */
-async function fetchFinancialStatements(symbol) {
-    // Usa tu nueva API key
-    const apikey = 'ztETFyB0BTuJFrDu1iTDl2Yv2JywtySr';
-    const url = `https://financialmodelingprep.com/api/v3/income-statement/${symbol}?limit=4&apikey=${apikey}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error("No se pudo obtener información financiera. " + errorText);
+// =======================
+// ESTADO FINANCIERO MEJORADO
+// =======================
+
+let financialTrendsChart = null;
+
+async function fetchYahooFinancials(symbol) {
+    const url = `https://trackerfolio.com:5000/api/estado/${symbol}`;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("No se pudo obtener información financiera.");
+        return await res.json();
+    } catch (error) {
+        console.error('Error fetching financials:', error);
+        throw error;
     }
-    return await res.json();
 }
 
-// Función para mostrar los datos en tablas
-function buildTable(fields, periods) {
-    let html = `<table class="table table-sm table-bordered table-financial"><thead><tr><th>Cuenta</th>`;
-    periods.forEach(p => html += `<th>${p}</th>`);
+function safe(val) {
+    return (val !== undefined && val !== null) ? Number(val).toLocaleString() : '<span class="text-danger fw-bold">N/D</span>';
+}
+
+function ratio(n, d) {
+    if (n === null || n === undefined || d === null || d === undefined || d === 0) {
+        return '<span class="text-danger fw-bold">N/D</span>';
+    }
+    const result = (n / d).toFixed(4);
+    const value = parseFloat(result);
+    const colorClass = value > 0 ? 'text-success' : value < 0 ? 'text-danger' : 'text-warning';
+    return `<span class="${colorClass} fw-bold">${result}</span>`;
+}
+
+function buildTable(fields, periods, title = "") {
+    let html = `
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="fw-bold">${title || 'Cuenta'}</th>
+    `;
+    periods.forEach(p => html += `<th class="text-center fw-bold">${p}</th>`);
     html += `</tr></thead><tbody>`;
+    
     fields.forEach(f => {
-        html += `<tr><td>${f.label}</td>`;
+        html += `<tr><td class="fw-semibold">${f.label}</td>`;
         periods.forEach((p, i) => {
-            html += `<td>${f.values[i] !== undefined ? Number(f.values[i]).toLocaleString() : 'N/D'}</td>`;
+            const value = f.values[i];
+            const formattedValue = safe(value);
+            html += `<td class="text-center">${formattedValue}</td>`;
         });
         html += `</tr>`;
     });
-    html += `</tbody></table>`;
+    html += `</tbody></table></div>`;
     return html;
 }
 
-// NUEVA FUNCIÓN: Calcula y muestra el crecimiento/decrecimiento debajo de cada fila
-function buildTableWithGrowth(fields, periods) {
-    let html = `<table class="table table-sm table-bordered table-financial"><thead><tr><th>Cuenta</th>`;
-    periods.forEach(p => html += `<th>${p}</th>`);
-    html += `</tr></thead><tbody>`;
-    fields.forEach((f, idx) => {
-        // Fila de valores
-        html += `<tr><td>${f.label}</td>`;
-        periods.forEach((p, i) => {
-            html += `<td>${f.values[i] !== undefined ? Number(f.values[i]).toLocaleString() : 'N/D'}</td>`;
-        });
-        html += `</tr>`;
-        // Fila de crecimiento/decrecimiento
-        html += `<tr class="growth-row"><td><strong>Evolución (%)</strong></td>`;
-        periods.forEach((p, i) => {
-            if (i === periods.length - 1) {
-                html += `<td></td>`;
-            } else {
-                const actual = f.values[i];
-                const siguiente = f.values[i + 1];
-                if (siguiente === 0 || siguiente === undefined || actual === undefined) {
-                    html += `<td></td>`;
-                } else {
-                    const growth = ((actual / siguiente) - 1) * 100;
-                    const fixed = growth.toFixed(1);
-                    if (growth > 0) {
-                        html += `<td style="color:green;">▲ +${fixed}%</td>`;
-                    } else if (growth < 0) {
-                        html += `<td style="color:red;">▼ ${fixed}%</td>`;
-                    } else {
-                        html += `<td style="color:#888;">0%</td>`;
+function showLoadingState(elementId) {
+    document.getElementById(elementId).innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2 text-muted">Obteniendo datos financieros...</p>
+        </div>
+    `;
+}
+
+function updateFinancialTrendsChart(data) {
+    const ctx = document.getElementById('financialTrendsChart');
+    if (!ctx) return;
+    
+    if (financialTrendsChart) {
+        financialTrendsChart.destroy();
+    }
+    
+    const incomeArr = data?.incomeStatementHistory?.incomeStatementHistory || [];
+    const periods = incomeArr.map(e => e.endDate ? new Date(e.endDate.raw * 1000).getFullYear() : 'N/D');
+    
+    const revenues = incomeArr.map(e => e.totalRevenue?.raw || 0);
+    const profits = incomeArr.map(e => e.netIncome?.raw || 0);
+    
+    financialTrendsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: periods,
+            datasets: [{
+                label: 'Ingresos Totales',
+                data: revenues,
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                fill: false,
+                tension: 0.4
+            }, {
+                label: 'Beneficio Neto',
+                data: profits,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: $${(context.parsed.y / 1000000000).toFixed(2)}B`;
+                        }
                     }
                 }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + (value / 1000000000).toFixed(1) + 'B';
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
             }
-        });
-        html += `</tr>`;
+        }
     });
-    html += `</tbody></table>`;
-    return html;
 }
 
-// Datos de ejemplo, reemplaza por tus datos en tiempo real
-const balanceData = [
-  { cuenta: "Activo Total", "2024": 350000, "2023": 320000, "2022": 300000 },
-  { cuenta: "Efectivo y Equivalentes", "2024": 50000, "2023": 45000, "2022": 40000 },
-  { cuenta: "Inventarios", "2024": 30000, "2023": 28000, "2022": 25000 },
-  { cuenta: "Pasivo Total", "2024": 120000, "2023": 110000, "2022": 100000 },
-  { cuenta: "Deuda a Corto Plazo", "2024": 20000, "2023": 18000, "2022": 15000 },
-  { cuenta: "Patrimonio", "2024": 230000, "2023": 210000, "2022": 200000 }
-];
-
-const cashflowData = [
-  { concepto: "Flujo de Caja Operativo", "2024": 40000, "2023": 38000, "2022": 35000 },
-  { concepto: "Flujo de Caja de Inversión", "2024": -10000, "2023": -8000, "2022": -7000 },
-  { concepto: "Flujo de Caja de Financiamiento", "2024": 5000, "2023": 4000, "2022": 3000 },
-  { concepto: "Flujo de Caja Neto", "2024": 35000, "2023": 34000, "2022": 31000 }
-];
-
-// Datos de ejemplo para trimestral (puedes adaptar a tu API)
-const quarterlyData = [
-  { cuenta: "Activo Total", "2025Q1": 355000, "2025Q2": 357000, "2025Q3": 359000, "2025Q4": 360000 },
-  { cuenta: "Efectivo y Equivalentes", "2025Q1": 51000, "2025Q2": 52000, "2025Q3": 53000, "2025Q4": 54000 },
-  { cuenta: "Inventarios", "2025Q1": 31000, "2025Q2": 32000, "2025Q3": 33000, "2025Q4": 34000 },
-  { cuenta: "Pasivo Total", "2025Q1": 121000, "2025Q2": 122000, "2025Q3": 123000, "2025Q4": 124000 },
-  { cuenta: "Deuda a Corto Plazo", "2025Q1": 21000, "2025Q2": 22000, "2025Q3": 23000, "2025Q4": 24000 },
-  { cuenta: "Patrimonio", "2025Q1": 234000, "2025Q2": 235000, "2025Q3": 236000, "2025Q4": 237000 }
-];
-
-// Función para renderizar tabla de Balance General con Evolución (%) en cada fila
-function renderBalanceTable(data) {
-  let html = `<table class="table table-bordered table-striped align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th>Cuenta</th>
-        <th>2024</th>
-        <th>2023</th>
-        <th>2022</th>
-      </tr>
-    </thead>
-    <tbody>`;
-  data.forEach(row => {
-    // Fila de valores
-    html += `<tr>
-      <td><strong>${row.cuenta}</strong></td>
-      <td>$${row["2024"].toLocaleString()}</td>
-      <td>$${row["2023"].toLocaleString()}</td>
-      <td>$${row["2022"].toLocaleString()}</td>
-    </tr>`;
-    // Fila de Evolución (%)
-    html += `<tr class="growth-row">
-      <td><strong>Evolución (%)</strong></td>`;
-    // 2024 vs 2023
-    if (row["2023"] && row["2024"]) {
-      const evo1 = ((row["2024"] / row["2023"] - 1) * 100).toFixed(1);
-      html += `<td style="color:${evo1 >= 0 ? 'green' : 'red'};">${evo1 > 0 ? '▲' : (evo1 < 0 ? '▼' : '')} ${evo1}%</td>`;
-    } else {
-      html += `<td></td>`;
-    }
-    // 2023 vs 2022
-    if (row["2022"] && row["2023"]) {
-      const evo2 = ((row["2023"] / row["2022"] - 1) * 100).toFixed(1);
-      html += `<td style="color:${evo2 >= 0 ? 'green' : 'red'};">${evo2 > 0 ? '▲' : (evo2 < 0 ? '▼' : '')} ${evo2}%</td>`;
-    } else {
-      html += `<td></td>`;
-    }
-    // Última columna vacía
-    html += `<td></td></tr>`;
-  });
-  html += `</tbody></table>`;
-  document.getElementById('balanceTable').innerHTML = html;
-}
-
-// Función para renderizar tabla de Flujo de Caja con Evolución (%) en cada fila
-function renderCashflowTable(data) {
-  let html = `<table class="table table-bordered table-striped align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th>Concepto</th>
-        <th>2024</th>
-        <th>2023</th>
-        <th>2022</th>
-      </tr>
-    </thead>
-    <tbody>`;
-  data.forEach(row => {
-    // Fila de valores
-    html += `<tr>
-      <td><strong>${row.concepto}</strong></td>
-      <td>$${row["2024"].toLocaleString()}</td>
-      <td>$${row["2023"].toLocaleString()}</td>
-      <td>$${row["2022"].toLocaleString()}</td>
-    </tr>`;
-    // Fila de Evolución (%)
-    html += `<tr class="growth-row">
-      <td><strong>Evolución (%)</strong></td>`;
-    // 2024 vs 2023
-    if (row["2023"] && row["2024"]) {
-      const evo1 = ((row["2024"] / row["2023"] - 1) * 100).toFixed(1);
-      html += `<td style="color:${evo1 >= 0 ? 'green' : 'red'};">${evo1 > 0 ? '▲' : (evo1 < 0 ? '▼' : '')} ${evo1}%</td>`;
-    } else {
-      html += `<td></td>`;
-    }
-    // 2023 vs 2022
-    if (row["2022"] && row["2023"]) {
-      const evo2 = ((row["2023"] / row["2022"] - 1) * 100).toFixed(1);
-      html += `<td style="color:${evo2 >= 0 ? 'green' : 'red'};">${evo2 > 0 ? '▲' : (evo2 < 0 ? '▼' : '')} ${evo2}%</td>`;
-    } else {
-      html += `<td></td>`;
-    }
-    // Última columna vacía
-    html += `<td></td></tr>`;
-  });
-  html += `</tbody></table>`;
-  document.getElementById('cashflowTable').innerHTML = html;
-}
-
-// Cambia la visión anual/trimestral
-document.getElementById('viewMode').addEventListener('change', function () {
-  if (this.value === "trimestral") {
-    renderBalanceTableQuarterly(quarterlyData);
-    // Haz lo mismo para incomeTable y cashflowTable si tienes datos trimestrales
-  } else {
-    renderBalanceTable(balanceData);
-    // Haz lo mismo para incomeTable y cashflowTable si tienes datos anuales
-  }
-});
-
-// Función principal para cargar y mostrar los estados financieros
 async function loadFinancials() {
     const symbol = document.getElementById('symbolInput').value.trim() || 'AAPL';
+    const viewMode = document.querySelector('input[name="viewMode"]:checked')?.value || 'anual';
+    
     document.getElementById('symbolTitle').textContent = symbol.toUpperCase();
-    document.getElementById('ratios').innerHTML = '<div class="text-center my-4"><div class="spinner-border"></div></div>';
-    document.getElementById('incomeTable').innerHTML = '';
+    
+    // Mostrar estados de carga
+    showLoadingState('ratios');
+    showLoadingState('incomeTable');
+    showLoadingState('balanceTable');
+    showLoadingState('cashflowTable');
 
     try {
-        const data = await fetchFinancialStatements(symbol);
-        if (!Array.isArray(data) || data.length === 0) throw new Error("No hay datos para este símbolo.");
-        const periods = data.map(e => e.calendarYear);
+        const data = await fetchYahooFinancials(symbol);
 
-        // Estado de Resultados
+        if (!data.incomeStatementHistory || !data.incomeStatementHistory.incomeStatementHistory || data.incomeStatementHistory.incomeStatementHistory.length === 0) {
+            const errorMessage = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    No se encontró información financiera para el símbolo <strong>${symbol.toUpperCase()}</strong>. 
+                    <br>Prueba con otro símbolo (ej: AAPL, MSFT, TSLA, GOOGL).
+                </div>
+            `;
+            document.getElementById('ratios').innerHTML = errorMessage;
+            document.getElementById('incomeTable').innerHTML = '';
+            document.getElementById('balanceTable').innerHTML = '';
+            document.getElementById('cashflowTable').innerHTML = '';
+            return;
+        }
+
+        // Extraer periodos
+        const periods = (data?.incomeStatementHistory?.incomeStatementHistory || []).map(e =>
+            e.endDate ? new Date(e.endDate.raw * 1000).getFullYear() : 'N/D'
+        );
+
+        function extract(field, arr) {
+            return arr.map(e => e[field]?.raw ?? null);
+        }
+
+        const incomeArr = data?.incomeStatementHistory?.incomeStatementHistory || [];
+        const balanceArr = data?.balanceSheetHistory?.balanceSheetStatements || [];
+        const cashArr = data?.cashflowStatementHistory?.cashflowStatements || [];
+
+        // Estados financieros
         const incomeFields = [
-            { label: "Ingresos Totales", values: data.map(e => e.revenue) },
-            { label: "Coste de Ventas", values: data.map(e => e.costOfRevenue) },
-            { label: "Beneficio Bruto", values: data.map(e => e.grossProfit) },
-            { label: "Gastos Operativos", values: data.map(e => e.operatingExpenses) },
-            { label: "Resultado Operativo", values: data.map(e => e.operatingIncome) },
-            { label: "EBITDA", values: data.map(e => e.ebitda) },
-            { label: "Resultado Neto", values: data.map(e => e.netIncome) },
-            { label: "BPA Básico", values: data.map(e => e.eps) }
+            { label: "Ingresos Totales", values: extract("totalRevenue", incomeArr) },
+            { label: "Costo de Ventas", values: extract("costOfRevenue", incomeArr) },
+            { label: "Beneficio Bruto", values: extract("grossProfit", incomeArr) },
+            { label: "Gastos Operativos", values: extract("totalOperatingExpenses", incomeArr) },
+            { label: "Beneficio Operativo", values: extract("operatingIncome", incomeArr) },
+            { label: "Beneficio Neto", values: extract("netIncome", incomeArr) },
+            { label: "EBITDA", values: extract("ebitda", incomeArr) },
+            { label: "BPA Básico", values: extract("basicEPS", incomeArr) },
+            { label: "BPA Diluido", values: extract("dilutedEPS", incomeArr) }
         ];
-        document.getElementById('ratios').innerHTML = '';
-        document.getElementById('incomeTable').innerHTML = buildTableWithGrowth(incomeFields, periods);
-        renderMarginsTable(incomeFields, periods);
 
-        // Balance General y Flujo de Caja en tiempo real (si los datos están en el mismo objeto)
-        // Si tu API devuelve también balance y cashflow, usa esos datos aquí.
-        // Si no, puedes dejar los datos de ejemplo o adaptarlo a tu API.
+        const balanceFields = [
+            { label: "Total Activos", values: extract("totalAssets", balanceArr) },
+            { label: "Total Pasivos", values: extract("totalLiab", balanceArr) },
+            { label: "Patrimonio Total", values: extract("totalStockholderEquity", balanceArr) },
+            { label: "Deuda a Largo Plazo", values: extract("longTermDebt", balanceArr) },
+            { label: "Efectivo y Equivalentes", values: extract("cash", balanceArr) },
+            { label: "Inventario", values: extract("inventory", balanceArr) }
+        ];
 
-        // Ejemplo: si tu API devuelve balance y cashflow junto con income
-        // const balanceFields = [
-        //     { cuenta: "Activo Total", values: data.map(e => e.totalAssets) },
-        //     ...
-        // ];
-        // renderBalanceTable(balanceFields);
+        const cashFields = [
+            { label: "Flujo de Caja Operativo", values: extract("totalCashFromOperatingActivities", cashArr) },
+            { label: "Flujo de Caja de Inversión", values: extract("totalCashflowsFromInvestingActivities", cashArr) },
+            { label: "Flujo de Caja de Financiación", values: extract("totalCashFromFinancingActivities", cashArr) },
+            { label: "Cambio en Efectivo", values: extract("changeInCash", cashArr) }
+        ];
 
-        // const cashflowFields = [
-        //     { concepto: "Flujo de Caja Operativo", values: data.map(e => e.operatingCashFlow) },
-        //     ...
-        // ];
-        // renderCashflowTable(cashflowFields);
+        // Renderizar tablas
+        document.getElementById('incomeTable').innerHTML = buildTable(incomeFields, periods, "Estado de Resultados");
+        document.getElementById('balanceTable').innerHTML = buildTable(balanceFields, periods, "Balance General");
+        document.getElementById('cashflowTable').innerHTML = buildTable(cashFields, periods, "Flujo de Caja");
 
-        // Si solo tienes datos de ejemplo, déjalos así:
-        renderBalanceTable(balanceData);
-        renderCashflowTable(cashflowData);
+        // Ratios financieros mejorados
+        let ratiosHTML = '';
+        for (let i = 0; i < periods.length; i++) {
+            const revenue = incomeFields[0].values[i];
+            const netIncome = incomeFields[5].values[i];
+            const ebitda = incomeFields[6].values[i];
+            const grossProfit = incomeFields[2].values[i];
+            const totalAssets = balanceFields[0].values[i];
+            const totalLiab = balanceFields[1].values[i];
+            const equity = balanceFields[2].values[i];
+            const cashOp = cashFields[0].values[i];
+
+            ratiosHTML += `
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <h6 class="card-title text-primary fw-bold mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>${periods[i]}
+                            </h6>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <div class="ratio-item">
+                                        <span class="ratio-label">💰 Margen Neto:</span>
+                                        <span class="ratio-value">${ratio(netIncome, revenue)}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="ratio-item">
+                                        <span class="ratio-label">📈 ROE:</span>
+                                        <span class="ratio-value">${ratio(netIncome, equity)}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="ratio-item">
+                                        <span class="ratio-label">🏦 Deuda/Activos:</span>
+                                        <span class="ratio-value">${ratio(totalLiab, totalAssets)}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="ratio-item">
+                                        <span class="ratio-label">⚖️ Deuda/Patrimonio:</span>
+                                        <span class="ratio-value">${ratio(totalLiab, equity)}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="ratio-item">
+                                        <span class="ratio-label">📊 Margen Bruto:</span>
+                                        <span class="ratio-value">${ratio(grossProfit, revenue)}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="ratio-item">
+                                        <span class="ratio-label">💼 EBITDA/Ingresos:</span>
+                                        <span class="ratio-value">${ratio(ebitda, revenue)}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="ratio-item">
+                                        <span class="ratio-label">💵 FCO/Ingresos:</span>
+                                        <span class="ratio-value">${ratio(cashOp, revenue)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('ratios').innerHTML = ratiosHTML || '<div class="alert alert-warning">No hay ratios disponibles.</div>';
+
+        // Actualizar gráfico de tendencias
+        updateFinancialTrendsChart(data);
+
+        // Actualizar comparación con industria (valores simulados)
+        updateIndustryComparison(netIncome[0], equity[0], revenue[0]);
 
     } catch (e) {
-        document.getElementById('ratios').innerHTML = `<div class="alert alert-danger text-center">${e.message}</div>`;
+        console.error('Error loading financials:', e);
+        const errorMessage = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                No se pudo obtener información financiera para este símbolo.
+                <br><small class="text-muted">Error: ${e.message}</small>
+            </div>
+        `;
+        document.getElementById('ratios').innerHTML = errorMessage;
+        document.getElementById('incomeTable').innerHTML = '';
+        document.getElementById('balanceTable').innerHTML = '';
+        document.getElementById('cashflowTable').innerHTML = '';
     }
 }
 
-// Haz la función global para el botón Buscar
-window.loadFinancials = loadFinancials;
-
-// Carga los datos por defecto al abrir la página
-window.onload = loadFinancials;
-
-// Llama a las funciones al cargar la página o cuando recibas datos nuevos
-renderBalanceTable(balanceData);
-renderCashflowTable(cashflowData);
-
-// Si tienes datos en tiempo real, reemplaza balanceData y cashflowData por los datos recibidos de tu API
-
-// Función para renderizar tabla de Balance General con Evolución (%) en cada fila y datos en tiempo real
-function renderBalanceTableFromAPI(data, periods) {
-  let html = `<table class="table table-bordered table-striped align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th>Cuenta</th>`;
-  periods.forEach(p => html += `<th>${p}</th>`);
-  html += `</tr>
-    </thead>
-    <tbody>`;
-  data.forEach(row => {
-    // Fila de valores
-    html += `<tr>
-      <td><strong>${row.cuenta}</strong></td>`;
-    periods.forEach((p, i) => {
-      html += `<td>${row.values[i] !== undefined ? Number(row.values[i]).toLocaleString() : 'N/D'}</td>`;
-    });
-    html += `</tr>`;
-    // Fila de Evolución (%)
-    html += `<tr class="growth-row">
-      <td><strong>Evolución (%)</strong></td>`;
-    periods.forEach((p, i) => {
-      if (i === periods.length - 1) {
-        html += `<td></td>`;
-      } else {
-        const actual = row.values[i];
-        const siguiente = row.values[i + 1];
-        if (siguiente === 0 || siguiente === undefined || actual === undefined) {
-          html += `<td></td>`;
-        } else {
-          const evo = ((actual / siguiente) - 1) * 100;
-          const fixed = evo.toFixed(1);
-          if (evo > 0) {
-            html += `<td style="color:green;">▲ +${fixed}%</td>`;
-          } else if (evo < 0) {
-            html += `<td style="color:red;">▼ ${fixed}%</td>`;
-          } else {
-            html += `<td style="color:#888;">0%</td>`;
-          }
-        }
-      }
-    });
-    html += `</tr>`;
-  });
-  html += `</tbody></table>`;
-  document.getElementById('balanceTable').innerHTML = html;
-}
-
-// Función para renderizar tabla de Flujo de Caja con Evolución (%) en cada fila y datos en tiempo real
-function renderCashflowTableFromAPI(data, periods) {
-  let html = `<table class="table table-bordered table-striped align-middle">
-    <thead class="table-dark">
-      <tr>
-        <th>Concepto</th>`;
-  periods.forEach(p => html += `<th>${p}</th>`);
-  html += `</tr>
-    </thead>
-    <tbody>`;
-  data.forEach(row => {
-    // Fila de valores
-    html += `<tr>
-      <td><strong>${row.concepto}</strong></td>`;
-    periods.forEach((p, i) => {
-      html += `<td>${row.values[i] !== undefined ? Number(row.values[i]).toLocaleString() : 'N/D'}</td>`;
-    });
-    html += `</tr>`;
-    // Fila de Evolución (%)
-    html += `<tr class="growth-row">
-      <td><strong>Evolución (%)</strong></td>`;
-    periods.forEach((p, i) => {
-      if (i === periods.length - 1) {
-        html += `<td></td>`;
-      } else {
-        const actual = row.values[i];
-        const siguiente = row.values[i + 1];
-        if (siguiente === 0 || siguiente === undefined || actual === undefined) {
-          html += `<td></td>`;
-        } else {
-          const evo = ((actual / siguiente) - 1) * 100;
-          const fixed = evo.toFixed(1);
-          if (evo > 0) {
-            html += `<td style="color:green;">▲ +${fixed}%</td>`;
-          } else if (evo < 0) {
-            html += `<td style="color:red;">▼ ${fixed}%</td>`;
-          } else {
-            html += `<td style="color:#888;">0%</td>`;
-          }
-        }
-      }
-    });
-    html += `</tr>`;
-  });
-  html += `</tbody></table>`;
-  document.getElementById('cashflowTable').innerHTML = html;
-}
-
-// Función para renderizar la tabla de márgenes (% sobre Ingresos Totales) automáticamente
-function renderMarginsTable(fields, periods) {
-    // Busca los campos necesarios
-    const ingresos = fields.find(f => f.label === "Ingresos Totales");
-    const bruto = fields.find(f => f.label === "Beneficio Bruto");
-    const operativo = fields.find(f => f.label === "Resultado Operativo");
-    const ebitda = fields.find(f => f.label === "EBITDA");
-    const neto = fields.find(f => f.label === "Resultado Neto");
-
-    let html = `<h5 class="mt-4 neon-glow">Márgenes (% sobre Ingresos Totales)</h5>
-    <table class="table table-sm table-bordered table-margins mt-2">
-        <thead class="table-dark">
-            <tr>
-                <th>Margen</th>`;
-    periods.forEach(p => html += `<th>${p}</th>`);
-    html += `</tr></thead><tbody>`;
-
-    // Helper para calcular y mostrar el margen
-    function margen(val, ingresos) {
-        if (val === undefined || ingresos === undefined || ingresos === 0) return 'N/D';
-        return (100 * val / ingresos).toFixed(2);
+function updateIndustryComparison(netIncome, equity, revenue) {
+    // Valores simulados para la comparación con la industria
+    const companyPE = revenue ? (netIncome / revenue * 100).toFixed(2) : '--';
+    const companyROE = equity ? (netIncome / equity * 100).toFixed(2) : '--';
+    
+    // Valores promedio de la industria (simulados)
+    const industryPE = '15.2';
+    const industryROE = '12.5';
+    
+    document.getElementById('companyPE').textContent = companyPE + '%';
+    document.getElementById('industryPE').textContent = industryPE + '%';
+    document.getElementById('companyROE').textContent = companyROE + '%';
+    document.getElementById('industryROE').textContent = industryROE + '%';
+    
+    // Agregar clases de color basadas en la comparación
+    const peElement = document.getElementById('companyPE');
+    const roeElement = document.getElementById('companyROE');
+    
+    if (parseFloat(companyPE) > parseFloat(industryPE)) {
+        peElement.className = 'company-value text-success fw-bold';
+    } else {
+        peElement.className = 'company-value text-danger fw-bold';
     }
-
-    // Array de márgenes a mostrar
-    const margenes = [
-        {
-            nombre: "Margen Bruto",
-            valores: bruto?.values
-        },
-        {
-            nombre: "Margen Operativo",
-            valores: operativo?.values
-        },
-        {
-            nombre: "Margen EBITDA",
-            valores: ebitda?.values
-        },
-        {
-            nombre: "Margen Neto",
-            valores: neto?.values
-        }
-    ];
-
-    margenes.forEach(mg => {
-        // Fila de valores
-        html += `<tr>
-            <td>${mg.nombre}</td>`;
-        periods.forEach((_, i) => {
-            const val = margen(mg.valores?.[i], ingresos?.values[i]);
-            html += `<td>${val !== 'N/D' ? val + '%' : 'N/D'}</td>`;
-        });
-        html += `</tr>`;
-        // Fila de evolución
-        html += `<tr class="growth-row">
-            <td><strong>Evolución (%)</strong></td>`;
-        periods.forEach((_, i) => {
-            if (i === periods.length - 1) {
-                html += `<td></td>`;
-            } else {
-                const actual = margen(mg.valores?.[i], ingresos?.values[i]);
-                const siguiente = margen(mg.valores?.[i + 1], ingresos?.values[i + 1]);
-                if (
-                    actual === 'N/D' ||
-                    siguiente === 'N/D' ||
-                    isNaN(Number(actual)) ||
-                    isNaN(Number(siguiente)) ||
-                    Number(siguiente) === 0
-                ) {
-                    html += `<td></td>`;
-                } else {
-                    const evo = ((Number(actual) / Number(siguiente)) - 1) * 100;
-                    const fixed = evo.toFixed(1);
-                    if (evo > 0) {
-                        html += `<td style="color:green;">▲ +${fixed}%</td>`;
-                    } else if (evo < 0) {
-                        html += `<td style="color:red;">▼ ${fixed}%</td>`;
-                    } else {
-                        html += `<td style="color:#888;">0%</td>`;
-                    }
-                }
-            }
-        });
-        html += `</tr>`;
-    });
-
-    html += `</tbody></table>`;
-    document.getElementById('marginsTable').innerHTML = html;
+    
+    if (parseFloat(companyROE) > parseFloat(industryROE)) {
+        roeElement.className = 'company-value text-success fw-bold';
+    } else {
+        roeElement.className = 'company-value text-danger fw-bold';
+    }
 }
 
-// Llama a esta función después de mostrar la tabla de resultados:
-renderMarginsTable(incomeFields, periods);
+// Event Listeners
+window.addEventListener('load', loadFinancials);
+
+// Agregar CSS adicional para los ratios
+const style = document.createElement('style');
+style.textContent = `
+    .ratio-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    .ratio-item:last-child {
+        border-bottom: none;
+    }
+    .ratio-label {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    .ratio-value {
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    .comparison-metric {
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .metric-name {
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: #374151;
+    }
+    .metric-comparison {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .company-value, .industry-value {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    .vs-text {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+`;
+document.head.appendChild(style);
