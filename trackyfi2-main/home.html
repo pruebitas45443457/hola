@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trackerfolios- Dashboard</title>
+    <link rel="icon" href="icono/icono trackerfolios2.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="home.css">
+</head>
+<body>
+    <!-- Barra lateral izquierda -->
+    <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-end position-fixed sidebar-custom">
+        <a href="index.html" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+            <span class="fs-4"><i class="fas fa-chart-pie me-2"></i>Trackerfolio</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="index.html" class="nav-link active" aria-current="page">
+                    <i class="fas fa-home me-2"></i> inicio
+                </a>
+            </li>
+            <li>
+                <a href="perfil.html" class="nav-link text-dark">
+                    <i class="fas fa-user me-2"></i> Perfil
+                </a>
+            </li>
+            <li>
+                <a href="configuracion.html" class="nav-link text-dark">
+                    <i class="fas fa-cog me-2"></i> Configuración
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link text-dark">
+                    <i class="fas fa-question-circle me-2"></i> Ayuda
+                </a>
+            </li>
+            <li>
+                <a href="estado.html" class="nav-link text-dark">
+                    <i class="fas fa-balance-scale me-2"></i> Estado financiero
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link text-dark" id="toggleThemeBtn" title="Cambiar modo blanco/negro">
+                    <i class="fas fa-moon me-2"></i> Modo Oscuro
+                </a>
+            </li>
+            <li>
+                <a href="dividendos.html" class="nav-link text-dark">
+                    <i class="fas fa-coins me-2"></i> Dividendos
+                </a>
+            </li>
+            <li>
+                <a href="interesCompuestos.html" class="nav-link text-dark">
+                    <i class="fas fa-percent me-2"></i> Interés Compuesto
+                </a>
+            </li>
+            <li>
+                <button 
+                    class="btn btn-premium w-100 my-2" 
+                    id="sidebarPremiumBtn" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="right" 
+                    title="Accede a todas las funciones por solo $5">
+                    <i class="fas fa-crown me-2"></i> Trackerfolio Premium
+                </button>
+            </li>
+            <li>
+                <a href="https://t.me/trackerfolio" class="nav-link text-dark" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram me-2"></i> Comunidad Telegram
+                </a>
+            </li>
+            <li>
+                <a href="chat.html" class="nav-link text-dark">
+                    <i class="fas fa-comments me-2"></i> Muro Social
+                </a>
+            </li>
+            <li>
+                <a href="calculadora.html" class="nav-link text-dark">
+                    <i class="fas fa-calculator me-2"></i> Calculadora de Préstamos
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="dashboard-container">
+            <div class="container">
+                <!-- Alertas -->
+                <div id="alertsContainer"></div>
+
+                <!-- Estadísticas -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <div class="stat-value" id="totalValue">$0.00</div>
+                            <div class="stat-label">Valor Total</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <div class="stat-value" id="totalInvestment">$0.00</div>
+                            <div class="stat-label">Inversión Total</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card">
+                            <div class="stat-value" id="totalProfit">$0.00</div>
+                            <div class="stat-label">Ganancia/Pérdida</div>
+                        </div>
+                    </div>
+                </div>
+                  <!-- Formularios de Agregar Assets -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <!-- Tarjeta Agregar Activo -->
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center cursor-pointer"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#assetFormContainer"
+                                 aria-controls="assetFormContainer">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                <span>Agregar Activo</span>
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div class="collapse" id="assetFormContainer">
+                                <div class="card-body p-0">
+                                    <!-- Formulario de agregar activo -->
+                                    <form id="addAssetForm" class="p-3">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="name" class="form-label">Nombre</label>
+                                                <input type="text" class="form-control" id="name" name="name" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="ticker" class="form-label">Ticker</label>
+                                                <input type="text" class="form-control" id="ticker" name="ticker">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="isin" class="form-label">ISIN</label>
+                                                <input type="text" class="form-control" id="isin" name="isin">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="quantity" class="form-label">Cantidad</label>
+                                                <input type="number" step="0.01" class="form-control" id="quantity" name="quantity" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="purchase_price" class="form-label">Precio de Compra</label>
+                                            <input type="number" step="0.01" class="form-control" id="purchase_price" name="purchase_price" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="currency" class="form-label">Divisa</label>
+                                            <select class="form-control" id="currency" name="currency">
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                                <option value="COP">COP</option>
+                                                <option value="MXN">MXN</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-dark mb-2" id="toggleDetailsAsset">+ Más Detalle</button>
+                                        <div id="assetDetails">
+                                            <div class="mb-3">
+                                                <label for="purchase_date" class="form-label">Fecha de compra</label>
+                                                <input type="date" class="form-control" id="purchase_date" name="purchase_date">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="notes" class="form-label">Notas o Comentarios</label>
+                                                <textarea class="form-control" id="notes" name="notes"></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="commission" class="form-label">Comisión</label>
+                                                <input type="number" step="0.01" class="form-control" id="commission" name="commission">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="broker" class="form-label">Broker / Plataforma</label>
+                                                <input type="text" class="form-control" id="broker" name="broker">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-custom w-100">
+                                            <i class="fas fa-plus me-2"></i>Agregar Activo
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Tarjeta Agregar Criptomoneda -->
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center cursor-pointer"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#cryptoFormContainer"
+                                 aria-controls="cryptoFormContainer">
+                                <i class="fab fa-bitcoin me-2"></i>
+                                <span>Agregar Criptomoneda</span>
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div class="collapse" id="cryptoFormContainer">
+                                <div class="card-body p-0">
+                                    <!-- Formulario de agregar cripto -->
+                                    <form id="addCryptoForm" class="p-3">
+                                        <div class="mb-3">
+                                            <label for="crypto_name" class="form-label">Criptomoneda</label>
+                                            <input type="text" class="form-control" id="crypto_name" name="crypto_name" placeholder="bitcoin,BTC" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="crypto_quantity" class="form-label">Cantidad</label>
+                                            <input type="number" step="0.00000001" class="form-control" id="crypto_quantity" name="crypto_quantity" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="crypto_purchase_price" class="form-label">Precio de Compra</label>
+                                            <input type="number" step="0.01" class="form-control" id="crypto_purchase_price" name="crypto_purchase_price" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="crypto_currency" class="form-label">Divisa</label>
+                                            <select class="form-control" id="crypto_currency" name="crypto_currency">
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                                <option value="COP">COP</option>
+                                                <option value="MXN">MXN</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-dark mb-2" id="toggleDetailsCrypto">+ Más Detalle</button>
+                                        <div id="cryptoDetails">
+                                            <div class="mb-3">
+                                                <label for="crypto_purchase_date" class="form-label">Fecha de compra</label>
+                                                <input type="date" class="form-control" id="crypto_purchase_date" name="crypto_purchase_date">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="crypto_notes" class="form-label">Notas o Comentarios</label>
+                                                <textarea class="form-control" id="crypto_notes" name="crypto_notes"></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="crypto_commission" class="form-label">Comisión</label>
+                                                <input type="number" step="0.01" class="form-control" id="crypto_commission" name="crypto_commission">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="crypto_broker" class="form-label">Broker / Plataforma</label>
+                                                <input type="text" class="form-control" id="crypto_broker" name="crypto_broker">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="fab fa-bitcoin me-2"></i>Agregar Cripto
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center cursor-pointer"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#cashFormContainer"
+                                 aria-controls="cashFormContainer">
+                                <i class="fas fa-wallet me-2"></i>
+                                <span>Agregar Efectivo</span>
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div class="collapse" id="cashFormContainer">
+                                <div class="card-body p-0">
+                                    <!-- Formulario de agregar efectivo -->
+                                    <form id="addCashForm" class="p-3">
+                                        <div class="mb-3">
+                                            <label for="cash_amount" class="form-label">Monto</label>
+                                            <input type="number" step="0.01" class="form-control" id="cash_amount" name="cash_amount" required="">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="cash_currency" class="form-label">Divisa</label>
+                                            <select class="form-control" id="cash_currency" name="cash_currency">
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                                <option value="COP">COP</option>
+                                                <option value="MXN">MXN</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="cash_notes" class="form-label">Notas</label>
+                                            <textarea class="form-control" id="cash_notes" name="cash_notes"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-info w-100">
+                                            <i class="fas fa-wallet me-2"></i>Agregar Efectivo
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Portafolio -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line me-2"></i>Mi Portafolio
+                        <button class="btn btn-sm btn-outline-dark float-end" id="refreshBtn" title="Actualizar portafolio" aria-label="Actualizar portafolio">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="portfolioContent">
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Ticker</th>
+                    <th>Cantidad</th>
+                    <th>Precio Compra</th>
+                    <th>Precio Actual</th>
+                    <th>Valor</th>
+                    <th>Peso (%)</th>
+                    <th>Ganancia/Pérdida</th>
+                    <th>Divisa</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="portfolioTableBody">
+                <!-- Las filas se llenan dinámicamente con JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+                    </div>
+                </div>
+
+                <!-- Gráficas de Ganancias/Pérdidas -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <i class="fas fa-chart-pie me-2"></i>Gráficas de Ganancias/Pérdidas
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <canvas id="profitPieChart"></canvas>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <canvas id="profitBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ajustes de Cuenta -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <i class="fas fa-cog me-2"></i>Ajustes de Cuenta
+                    </div>
+                    <div class="card-body">
+                        <!-- Datos Personales -->
+                        <div class="card-setting datos-personales mb-4">
+                            <div class="section-title">
+                                <i class="fas fa-user"></i>
+                                <span data-i18n="datos_personales">Datos personales</span>
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label" data-i18n="correo">Correo electrónico</span>
+                                <span id="userEmail">usuario@email.com</span>
+                                <button class="btn btn-outline-info btn-sm d-flex align-items-center gap-2"
+                                        onclick="showEmailModal()" data-i18n="cambiar">
+                                    <i class="fas fa-pen"></i>
+                                    <span>Cambiar</span>
+                                </button>
+                            </div>
+                            <div class="setting-row">
+                                <span class="setting-label" data-i18n="contraseña">Contraseña</span>
+                                <span>••••••••</span>
+                                <button class="btn btn-outline-warning btn-sm d-flex align-items-center gap-2"
+                                        onclick="alert('Función de cambio de contraseña próximamente')" data-i18n="cambiar">
+                                    <i class="fas fa-key"></i>
+                                    <span>Cambiar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+<!-- Modal Detalles -->
+<div class="modal fade" id="assetDetailsModal" tabindex="-1" aria-labelledby="assetDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assetDetailsModalLabel">Detalles del Activo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="assetDetailsModalBody">
+        <!-- Aquí se llenan los detalles dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="editAssetForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Editar Activo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="editModalBody">
+          <!-- Aquí se llena el formulario dinámicamente -->
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+        <!-- Agrega este botón donde quieras, por ejemplo, arriba de la tabla -->
+<button id="updateAllPricesBtn" class="btn btn-primary mb-3">
+    <i class="fas fa-sync-alt"></i> Actualizar Precios
+</button>
+
+        <!-- Bootstrap 5 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Chart.js para gráficas -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script type="module" src="home.js"></script>
+    </div>
+    <!-- Modal Detalles -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailsModalLabel">Detalles del Portafolio</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="detailsModalBody">
+        <!-- Aquí se llenan los detalles dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Modal Editar Activo -->
+<div class="modal fade" id="editAssetModal" tabindex="-1" aria-labelledby="editAssetModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="editAssetForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editAssetModalLabel">Editar Activo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="editAssetModalBody">
+          <!-- Aquí se llena el formulario dinámicamente -->
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>
