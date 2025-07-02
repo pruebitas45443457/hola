@@ -2,48 +2,488 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <title>Dividendos - Trackerfolio</title>
+    <link rel="icon" href="icono/icono trackerfolios2.png" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dividendos</title>
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="dividendos.css">
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="home.css">
 </head>
 <body>
-<div class="div-card">
-    <div class="div-title">Consulta de Dividendos</div>
-    <form id="divForm" class="mb-3">
-        <input type="text" id="divInput" class="form-control" placeholder="Nombre, ticker o ISIN" required>
-        <button class="btn w-100 mt-2" type="submit">Buscar</button>
-    </form>
-    <div id="divResult"></div>
-</div>
-<script>
-document.getElementById('divForm').onsubmit = async function(e) {
-    e.preventDefault();
-    const q = document.getElementById('divInput').value.trim();
-    const resultDiv = document.getElementById('divResult');
-    resultDiv.innerHTML = "Buscando...";
-    try {
-        const res = await fetch(`https://f1c2c6ea-fea4-4036-8a48-4d1e9afc1c0b-00-2u276jfqok5ja.kirk.replit.dev/api/dividendos?q=${encodeURIComponent(q)}`);
-        const data = await res.json();
-        if (data.error) {
-            resultDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
-            return;
-        }
-        let html = `<h5>Fuente: ${data.fuente}</h5>`;
-        if (data.dividendos && data.dividendos.length) {
-            html += `<table class="table table-sm"><thead><tr><th>Fecha</th><th>Dividendo</th></tr></thead><tbody>`;
-            data.dividendos.slice(-20).reverse().forEach(d => {
-                html += `<tr><td>${d.fecha || d.date}</td><td>${d.dividendo || d.value}</td></tr>`;
+    <!-- Barra lateral izquierda -->
+    <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-end position-fixed sidebar-custom">
+        <a href="index.html" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+            <span class="fs-4"><i class="fas fa-chart-pie me-2"></i>Trackerfolio</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="home.html" class="nav-link text-dark">
+                    <i class="fas fa-chart-line me-2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="estado.html" class="nav-link text-dark">
+                    <i class="fas fa-balance-scale me-2"></i> Estado Financiero
+                </a>
+            </li>
+            <li>
+                <a href="dividendos.html" class="nav-link active" aria-current="page">
+                    <i class="fas fa-coins me-2"></i> Dividendos
+                </a>
+            </li>
+            <li>
+                <a href="interesCompuestos.html" class="nav-link text-dark">
+                    <i class="fas fa-percent me-2"></i> Interés Compuesto
+                </a>
+            </li>
+            <li>
+                <a href="calculadora.html" class="nav-link text-dark">
+                    <i class="fas fa-calculator me-2"></i> Calculadora
+                </a>
+            </li>
+            <li>
+                <a href="configuracion.html" class="nav-link text-dark">
+                    <i class="fas fa-cog me-2"></i> Configuración
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link text-dark" id="toggleThemeBtn" title="Cambiar modo blanco/negro">
+                    <i class="fas fa-moon me-2"></i> Modo Oscuro
+                </a>
+            </li>
+            <li>
+                <button 
+                    class="btn btn-premium w-100 my-2" 
+                    id="sidebarPremiumBtn" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="right" 
+                    title="Accede a todas las funciones por solo $5">
+                    <i class="fas fa-crown me-2"></i> Trackerfolio Premium
+                </button>
+            </li>
+            <li>
+                <a href="https://t.me/trackerfolio" class="nav-link text-dark" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram me-2"></i> Comunidad
+                </a>
+            </li>
+            <li>
+                <a href="chat.html" class="nav-link text-dark">
+                    <i class="fas fa-comments me-2"></i> Muro Social
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="dashboard-container">
+            <div class="container">
+                <!-- Alertas -->
+                <div id="alertsContainer"></div>
+
+                <!-- Encabezado -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <h2 class="display-6 fw-bold mb-3">
+                            <i class="fas fa-coins me-2"></i>
+                            Centro de Dividendos
+                        </h2>
+                        <p class="lead">Gestiona y rastrea los dividendos de tu portafolio</p>
+                    </div>
+                </div>
+
+                <!-- Resumen de Dividendos del Portafolio -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-wallet me-2"></i>Resumen de Dividendos del Portafolio</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="dividend-summary-card">
+                                    <div class="dividend-icon">
+                                        <i class="fas fa-calendar-day"></i>
+                                    </div>
+                                    <div class="dividend-value" id="portfolioMonthlyDividends">$0.00</div>
+                                    <div class="dividend-label">Dividendos Mensuales</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="dividend-summary-card">
+                                    <div class="dividend-icon">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div class="dividend-value" id="portfolioAnnualDividends">$0.00</div>
+                                    <div class="dividend-label">Dividendos Anuales</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="dividend-summary-card">
+                                    <div class="dividend-icon">
+                                        <i class="fas fa-percentage"></i>
+                                    </div>
+                                    <div class="dividend-value" id="portfolioYield">0.00%</div>
+                                    <div class="dividend-label">Yield Promedio</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="dividend-summary-card">
+                                    <div class="dividend-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="dividend-value" id="nextPaymentDate">--</div>
+                                    <div class="dividend-label">Próximo Pago</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Búsqueda de Dividendos -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-search me-2"></i>Consulta de Dividendos por Símbolo</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="divForm" class="row g-3">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" id="divInput" class="form-control form-control-lg" 
+                                           placeholder="Ingresa nombre, ticker o ISIN (Ej: AAPL, Apple, US0378331005)" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary btn-lg w-100" type="submit">
+                                    <i class="fas fa-search me-2"></i>Buscar Dividendos
+                                </button>
+                            </div>
+                        </form>
+                        <div id="divResult" class="mt-4"></div>
+                    </div>
+                </div>
+
+                <!-- Calendario de Dividendos -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Calendario de Dividendos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="dividendCalendar">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Próximos Pagos (30 días)</h6>
+                                    <div id="upcomingDividends" class="dividend-list">
+                                        <div class="text-muted">Carga tu portafolio para ver dividendos próximos</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Historial Reciente</h6>
+                                    <div id="recentDividends" class="dividend-list">
+                                        <div class="text-muted">No hay dividendos recientes</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Análisis de Dividendos -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Análisis de Dividendos</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <canvas id="dividendTrendsChart" height="300"></canvas>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="fw-bold mb-3">Métricas de Dividendos</h6>
+                                <div class="dividend-metric">
+                                    <span class="metric-label">Crecimiento Anual:</span>
+                                    <span class="metric-value" id="dividendGrowth">0.00%</span>
+                                </div>
+                                <div class="dividend-metric">
+                                    <span class="metric-label">Consistencia:</span>
+                                    <span class="metric-value" id="dividendConsistency">--</span>
+                                </div>
+                                <div class="dividend-metric">
+                                    <span class="metric-label">Payout Ratio:</span>
+                                    <span class="metric-value" id="payoutRatio">--</span>
+                                </div>
+                                <div class="dividend-metric">
+                                    <span class="metric-label">Cobertura:</span>
+                                    <span class="metric-value" id="dividendCoverage">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculadora de Dividendos -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex align-items-center cursor-pointer"
+                         data-bs-toggle="collapse"
+                         data-bs-target="#dividendCalculator"
+                         aria-controls="dividendCalculator">
+                        <i class="fas fa-calculator me-2"></i>
+                        <span>Calculadora de Dividendos</span>
+                        <i class="fas fa-chevron-down ms-auto"></i>
+                    </div>
+                    <div class="collapse" id="dividendCalculator">
+                        <div class="card-body">
+                            <form id="dividendCalcForm" class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="calcShares" class="form-label">Número de Acciones</label>
+                                    <input type="number" class="form-control" id="calcShares" step="1" min="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="calcDividendPerShare" class="form-label">Dividendo por Acción</label>
+                                    <input type="number" class="form-control" id="calcDividendPerShare" step="0.01" min="0">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="calcFrequency" class="form-label">Frecuencia</label>
+                                    <select class="form-control" id="calcFrequency">
+                                        <option value="4">Trimestral</option>
+                                        <option value="2">Semestral</option>
+                                        <option value="1">Anual</option>
+                                        <option value="12">Mensual</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="button" class="btn btn-primary w-100" onclick="calculateDividends()">
+                                        <i class="fas fa-calculator me-2"></i>Calcular
+                                    </button>
+                                </div>
+                            </form>
+                            <div id="calculatorResults" class="mt-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Aplicar tema guardado
+        window.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                const btn = document.getElementById('toggleThemeBtn');
+                if (btn) {
+                    const icon = btn.querySelector('i');
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    btn.querySelector('span').textContent = 'Modo Claro';
+                }
+            }
+            loadPortfolioDividends();
+        });
+
+        // Toggle tema
+        document.getElementById('toggleThemeBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                this.querySelector('span').textContent = 'Modo Claro';
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                this.querySelector('span').textContent = 'Modo Oscuro';
+            }
+        });
+
+        // Búsqueda de dividendos mejorada
+        document.getElementById('divForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const q = document.getElementById('divInput').value.trim();
+            const resultDiv = document.getElementById('divResult');
+            
+            if (!q) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Por favor ingresa un símbolo válido</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Buscando dividendos...</span>
+                    </div>
+                    <p class="mt-2">Buscando dividendos para ${q.toUpperCase()}...</p>
+                </div>`;
+
+            try {
+                const res = await fetch(`https://f1c2c6ea-fea4-4036-8a48-4d1e9afc1c0b-00-2u276jfqok5ja.kirk.replit.dev/api/dividendos?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+                
+                if (data.error) {
+                    resultDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>${data.error}</div>`;
+                    return;
+                }
+
+                let html = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Resultados para: ${q.toUpperCase()}</h6>
+                            <small class="text-muted">Fuente: ${data.fuente}</small>
+                        </div>
+                        <div class="card-body">`;
+
+                if (data.dividendos && data.dividendos.length) {
+                    html += `
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Dividendo</th>
+                                        <th>Variación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                    
+                    const recentDividends = data.dividendos.slice(-20).reverse();
+                    recentDividends.forEach((d, index) => {
+                        const prevDiv = recentDividends[index + 1];
+                        let variation = '';
+                        if (prevDiv && d.dividendo && prevDiv.dividendo) {
+                            const change = ((parseFloat(d.dividendo) - parseFloat(prevDiv.dividendo)) / parseFloat(prevDiv.dividendo) * 100).toFixed(2);
+                            const changeClass = change > 0 ? 'text-success' : change < 0 ? 'text-danger' : 'text-muted';
+                            variation = `<span class="${changeClass}">${change > 0 ? '+' : ''}${change}%</span>`;
+                        }
+                        
+                        html += `<tr>
+                            <td>${d.fecha || d.date}</td>
+                            <td><strong>${d.dividendo || d.value}</strong></td>
+                            <td>${variation}</td>
+                        </tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                    
+                    // Agregar estadísticas
+                    if (recentDividends.length > 1) {
+                        const values = recentDividends.map(d => parseFloat(d.dividendo || d.value)).filter(v => !isNaN(v));
+                        const avgDividend = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(4);
+                        const annualEstimate = (avgDividend * 4).toFixed(2); // Asumiendo pagos trimestrales
+                        
+                        html += `
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="fw-bold text-primary">${avgDividend}</div>
+                                        <small class="text-muted">Dividendo Promedio</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="fw-bold text-success">$${annualEstimate}</div>
+                                        <small class="text-muted">Estimado Anual</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <div class="fw-bold text-info">${recentDividends.length}</div>
+                                        <small class="text-muted">Pagos Registrados</small>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                } else {
+                    html += '<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>No se encontraron dividendos para este símbolo.</div>';
+                }
+
+                html += '</div></div>';
+                resultDiv.innerHTML = html;
+            } catch (e) {
+                console.error('Error:', e);
+                resultDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error al consultar dividendos. Inténtalo de nuevo.</div>`;
+            }
+        };
+
+        // Cargar dividendos del portafolio
+        function loadPortfolioDividends() {
+            const portfolioData = JSON.parse(localStorage.getItem('portfolioData') || '[]');
+            
+            // Calcular métricas de dividendos del portafolio
+            let totalAnnualDividends = 0;
+            let totalPortfolioValue = 0;
+            
+            portfolioData.forEach(asset => {
+                if (asset.value) {
+                    totalPortfolioValue += asset.value;
+                    // Estimar dividendos basado en yield promedio de la industria (3%)
+                    totalAnnualDividends += asset.value * 0.03;
+                }
             });
-            html += `</tbody></table>`;
-        } else {
-            html += "<div>No hay dividendos disponibles.</div>";
+
+            const monthlyDividends = totalAnnualDividends / 12;
+            const avgYield = totalPortfolioValue > 0 ? (totalAnnualDividends / totalPortfolioValue * 100) : 0;
+
+            document.getElementById('portfolioMonthlyDividends').textContent = `$${monthlyDividends.toFixed(2)}`;
+            document.getElementById('portfolioAnnualDividends').textContent = `$${totalAnnualDividends.toFixed(2)}`;
+            document.getElementById('portfolioYield').textContent = `${avgYield.toFixed(2)}%`;
+            document.getElementById('nextPaymentDate').textContent = 'Próximo mes';
         }
-        resultDiv.innerHTML = html;
-    } catch (e) {
-        resultDiv.innerHTML = `<div class="alert alert-danger">Error al consultar dividendos.</div>`;
-    }
-};
-</script>
+
+        // Calculadora de dividendos
+        function calculateDividends() {
+            const shares = parseFloat(document.getElementById('calcShares').value) || 0;
+            const dividendPerShare = parseFloat(document.getElementById('calcDividendPerShare').value) || 0;
+            const frequency = parseInt(document.getElementById('calcFrequency').value) || 4;
+
+            if (shares <= 0 || dividendPerShare <= 0) {
+                document.getElementById('calculatorResults').innerHTML = '<div class="alert alert-warning">Por favor ingresa valores válidos</div>';
+                return;
+            }
+
+            const paymentPerPeriod = shares * dividendPerShare;
+            const annualDividends = paymentPerPeriod * frequency;
+            const monthlyDividends = annualDividends / 12;
+
+            document.getElementById('calculatorResults').innerHTML = `
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">Resultados del Cálculo</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="fw-bold text-primary">$${paymentPerPeriod.toFixed(2)}</div>
+                                    <small class="text-muted">Por Pago</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="fw-bold text-success">$${monthlyDividends.toFixed(2)}</div>
+                                    <small class="text-muted">Mensual Promedio</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="fw-bold text-info">$${annualDividends.toFixed(2)}</div>
+                                    <small class="text-muted">Total Anual</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+    </script>
 </body>
 </html>
