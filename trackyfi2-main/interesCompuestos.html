@@ -2,97 +2,590 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Calculadora de Interés Compuesto</title>
+    <title>Calculadora de Interés Compuesto - Trackerfolio</title>
+    <link rel="icon" href="icono/icono trackerfolios2.png" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
+    <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Highcharts -->
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <!-- Estilos personalizados si tienes -->
+    <!-- Estilos personalizados -->
     <link rel="stylesheet" href="home.css">
-    <link rel="stylesheet" href="interesCompuestos.css">
 </head>
 <body>
-    <!-- Cambia la barra lateral a la izquierda -->
-    <div class="sidebar-left">
-        <div class="logo-trackerfolio d-flex align-items-center mb-4">
-            <i class="fas fa-chart-pie me-2 icon-chart-pie"></i>
-            <span class="trackerfolio-title">
-                TRACKERFOLIO
-            </span>
-        </div>
-        <nav>
-            <a href="index.html"><i class="fas fa-home"></i> Inicio</a>
-            <a href="perfil.html"><i class="fas fa-user"></i> Perfil</a>
-            <a href="configuracion.html"><i class="fas fa-cog"></i> Configuración</a>
-            <a href="ayuda.html"><i class="fas fa-question-circle"></i> Ayuda</a>
-        </nav>
+    <!-- Barra lateral izquierda -->
+    <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-end position-fixed sidebar-custom">
+        <a href="index.html" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+            <span class="fs-4"><i class="fas fa-chart-pie me-2"></i>Trackerfolio</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="home.html" class="nav-link text-dark">
+                    <i class="fas fa-chart-line me-2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="estado.html" class="nav-link text-dark">
+                    <i class="fas fa-balance-scale me-2"></i> Estado Financiero
+                </a>
+            </li>
+            <li>
+                <a href="dividendos.html" class="nav-link text-dark">
+                    <i class="fas fa-coins me-2"></i> Dividendos
+                </a>
+            </li>
+            <li>
+                <a href="interesCompuestos.html" class="nav-link active" aria-current="page">
+                    <i class="fas fa-percent me-2"></i> Interés Compuesto
+                </a>
+            </li>
+            <li>
+                <a href="calculadora.html" class="nav-link text-dark">
+                    <i class="fas fa-calculator me-2"></i> Calculadora
+                </a>
+            </li>
+            <li>
+                <a href="configuracion.html" class="nav-link text-dark">
+                    <i class="fas fa-cog me-2"></i> Configuración
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link text-dark" id="toggleThemeBtn" title="Cambiar modo blanco/negro">
+                    <i class="fas fa-moon me-2"></i> Modo Oscuro
+                </a>
+            </li>
+            <li>
+                <button 
+                    class="btn btn-premium w-100 my-2" 
+                    id="sidebarPremiumBtn" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="right" 
+                    title="Accede a todas las funciones por solo $5">
+                    <i class="fas fa-crown me-2"></i> Trackerfolio Premium
+                </button>
+            </li>
+            <li>
+                <a href="https://t.me/trackerfolio" class="nav-link text-dark" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram me-2"></i> Comunidad
+                </a>
+            </li>
+            <li>
+                <a href="chat.html" class="nav-link text-dark">
+                    <i class="fas fa-comments me-2"></i> Muro Social
+                </a>
+            </li>
+        </ul>
     </div>
 
-    
-    <div class="container py-5">
-        <div class="card mt-4" id="compoundInterestSection">
-            <div class="card-header bg-success text-white">
-                <i class="fas fa-percent me-2"></i> Calculadora de Interés Compuesto
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="dashboard-container">
+            <div class="container">
+                <!-- Encabezado -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <h2 class="display-6 fw-bold mb-3">
+                            <i class="fas fa-percent me-2"></i>
+                            Calculadora de Interés Compuesto
+                        </h2>
+                        <p class="lead">Descubre el poder del interés compuesto en tus inversiones</p>
+                    </div>
+                </div>
+
+                <!-- Formulario de Cálculo -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Parámetros de Inversión</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="compoundInterestForm" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Inversión inicial ($)</label>
+                                <input type="number" class="form-control" id="ci_inicial" required placeholder="Ej: 10,000" min="0" step="0.01">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Contribución mensual ($)</label>
+                                <input type="number" class="form-control" id="ci_mensual" required placeholder="Ej: 500" min="0" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Años</label>
+                                <input type="number" class="form-control" id="ci_anios" required placeholder="Ej: 10" min="1" max="50" step="1">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Tasa anual (%)</label>
+                                <input type="number" class="form-control" id="ci_tasa" required placeholder="Ej: 7" min="0" max="50" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Frecuencia</label>
+                                <select class="form-control" id="ci_frecuencia">
+                                    <option value="anual">Anual</option>
+                                    <option value="semestral">Semestral</option>
+                                    <option value="trimestral">Trimestral</option>
+                                    <option value="mensual" selected>Mensual</option>
+                                    <option value="diaria">Diaria</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-chart-bar me-2"></i>Calcular y Graficar
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-lg ms-2" id="resetForm">
+                                    <i class="fas fa-redo me-2"></i>Limpiar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Resultados -->
+                <div id="compoundInterestResult" style="display: none;">
+                    <!-- Resumen de Resultados -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Resumen de Resultados</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="resultadosResumen">
+                                <!-- Se llena dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de Crecimiento (Líneas estilo trading) -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Evolución de la Inversión</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="compoundInterestChart" height="300"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Proyección Anual -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Proyección Anual Detallada</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="proyeccionTable"></div>
+                        </div>
+                    </div>
+
+                    <!-- Comparación con Inversión Simple -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-balance-scale me-2"></i>Comparación: Interés Simple vs Compuesto</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="comparacionInteres"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <form id="compoundInterestForm" class="row g-3 mb-4">
-
-                    <div class="col-md-3">
-                        <label class="form-label">Inversión inicial ($)</label>
-                        <input type="number" class="form-control" id="ci_inicial" required placeholder="Ej: 1000" title="Ingrese la inversión inicial en dólares">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Contribución mensual ($)</label>
-                        <input type="number" class="form-control" id="ci_mensual" required placeholder="Ej: 100" title="Ingrese la contribución mensual en dólares">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Años</label>
-                        <input type="number" class="form-control" id="ci_anios" required placeholder="Ej: 5" title="Ingrese el número de años">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Tasa anual (%)</label>
-                        <input type="number" class="form-control" id="ci_tasa" required placeholder="Ej: 8" title="Ingrese la tasa de interés anual en porcentaje">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label" for="ci_frecuencia">Frecuencia</label>
-                        <select class="form-control" id="ci_frecuencia" title="Seleccione la frecuencia de capitalización">
-                            <option value="anual">Anual</option>
-                            <option value="semestral">Semestral</option>
-                            <option value="trimestral">Trimestral</option>
-                            <option value="mensual" selected>Mensual</option>
-                            <option value="diaria">Diaria</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label" for="ci_moneda">Moneda</label>
-                        <select class="form-control" id="ci_moneda" title="Seleccione la moneda">
-                            <option value="USD" selected>Dólar (USD)</option>
-                            <option value="EUR">Euro (EUR)</option>
-                            <option value="COP">Peso colombiano (COP)</option>
-                            <option value="MXN">Peso mexicano (MXN)</option>
-                            <option value="GBP">Libra esterlina (GBP)</option>
-                            <option value="ARS">Peso argentino (ARS)</option>
-                            <option value="BRL">Real brasileño (BRL)</option>
-                            <option value="CLP">Peso chileno (CLP)</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-chart-bar me-2"></i>Calcular y Graficar
-                        </button>
-                    </div>
-                </form>
-           
-                <div id="compoundInterestResult" class="mt-3"></div>  <div id="compoundInterestResult" class="mt-3"></div>
-            </div>      <div id="compoundInterestChart"></div>
-        </div>      </div>
+        </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="interesCompuestos.js"></script>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Aplicar tema guardado
+        window.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                const btn = document.getElementById('toggleThemeBtn');
+                if (btn) {
+                    const icon = btn.querySelector('i');
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    btn.querySelector('span').textContent = 'Modo Claro';
+                }
+            }
+        });
+
+        // Toggle tema
+        document.getElementById('toggleThemeBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                this.querySelector('span').textContent = 'Modo Claro';
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                this.querySelector('span').textContent = 'Modo Oscuro';
+            }
+        });
+
+        let compoundChart = null;
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function getCompoundingPeriods(frequency) {
+            const periods = {
+                'diaria': 365,
+                'mensual': 12,
+                'trimestral': 4,
+                'semestral': 2,
+                'anual': 1
+            };
+            return periods[frequency] || 12;
+        }
+
+        function calculateCompoundInterest(principal, monthlyContribution, annualRate, years, frequency) {
+            const n = getCompoundingPeriods(frequency);
+            const r = annualRate / 100;
+            const monthlyRate = r / 12;
+            
+            const data = [];
+            let currentValue = principal;
+            let totalContributions = principal;
+            
+            for (let year = 0; year <= years; year++) {
+                if (year > 0) {
+                    // Agregar contribuciones mensuales del año
+                    for (let month = 1; month <= 12; month++) {
+                        currentValue += monthlyContribution;
+                        totalContributions += monthlyContribution;
+                        // Aplicar interés mensual
+                        currentValue *= (1 + monthlyRate);
+                    }
+                }
+                
+                const interestEarned = currentValue - totalContributions;
+                
+                data.push({
+                    year: year,
+                    totalValue: currentValue,
+                    contributions: totalContributions,
+                    interestEarned: interestEarned,
+                    simpleInterest: totalContributions + (totalContributions * r * year)
+                });
+            }
+            
+            return data;
+        }
+
+        function createCompoundChart(data) {
+            const ctx = document.getElementById('compoundInterestChart');
+            if (!ctx) return;
+            
+            if (compoundChart) {
+                compoundChart.destroy();
+            }
+            
+            const labels = data.map(d => `Año ${d.year}`);
+            const compoundValues = data.map(d => d.totalValue);
+            const contributions = data.map(d => d.contributions);
+            const simpleValues = data.map(d => d.simpleInterest);
+            
+            compoundChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Interés Compuesto',
+                        data: compoundValues,
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.2,
+                        pointRadius: 4,
+                        pointHoverRadius: 8,
+                        borderWidth: 3
+                    }, {
+                        label: 'Contribuciones Total',
+                        data: contributions,
+                        borderColor: '#6b7280',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.2,
+                        pointRadius: 2,
+                        pointHoverRadius: 6,
+                        borderWidth: 2,
+                        borderDash: [5, 5]
+                    }, {
+                        label: 'Interés Simple',
+                        data: simpleValues,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.2,
+                        pointRadius: 2,
+                        pointHoverRadius: 6,
+                        borderWidth: 2,
+                        borderDash: [10, 5]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatMoney(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Tiempo'
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Valor ($)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatMoney(value);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        function generateProjectionTable(data) {
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="text-center">Año</th>
+                                <th class="text-center">Valor Total</th>
+                                <th class="text-center">Contribuciones</th>
+                                <th class="text-center">Interés Ganado</th>
+                                <th class="text-center">Crecimiento Anual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            data.forEach((item, index) => {
+                const growth = index > 0 ? ((item.totalValue - data[index-1].totalValue) / data[index-1].totalValue * 100).toFixed(2) : '0.00';
+                html += `
+                    <tr>
+                        <td class="text-center fw-bold">${item.year}</td>
+                        <td class="text-center">${formatMoney(item.totalValue)}</td>
+                        <td class="text-center">${formatMoney(item.contributions)}</td>
+                        <td class="text-center text-success">${formatMoney(item.interestEarned)}</td>
+                        <td class="text-center">
+                            <span class="badge bg-info">${growth}%</span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        document.getElementById('compoundInterestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const inicial = parseFloat(document.getElementById('ci_inicial').value) || 0;
+            const mensual = parseFloat(document.getElementById('ci_mensual').value) || 0;
+            const anios = parseInt(document.getElementById('ci_anios').value) || 0;
+            const tasa = parseFloat(document.getElementById('ci_tasa').value) || 0;
+            const frecuencia = document.getElementById('ci_frecuencia').value;
+            
+            if (inicial <= 0 && mensual <= 0) {
+                alert('Debe ingresar una inversión inicial o contribución mensual mayor a 0');
+                return;
+            }
+            
+            if (anios <= 0 || tasa <= 0) {
+                alert('Los años y la tasa deben ser mayores a 0');
+                return;
+            }
+            
+            const data = calculateCompoundInterest(inicial, mensual, tasa, anios, frecuencia);
+            const finalData = data[data.length - 1];
+            
+            // Resumen de resultados
+            const totalContributed = finalData.contributions;
+            const totalInterest = finalData.interestEarned;
+            const finalValue = finalData.totalValue;
+            const simpleInterestValue = finalData.simpleInterest;
+            const compoundAdvantage = finalValue - simpleInterestValue;
+            
+            document.getElementById('resultadosResumen').innerHTML = `
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-value">${formatMoney(finalValue)}</div>
+                        <div class="stat-label">Valor Final</div>
+                        <div class="stat-change text-success">Meta Alcanzada</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-hand-holding-usd"></i>
+                        </div>
+                        <div class="stat-value">${formatMoney(totalContributed)}</div>
+                        <div class="stat-label">Total Invertido</div>
+                        <div class="stat-change">Capital Aportado</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-value">${formatMoney(totalInterest)}</div>
+                        <div class="stat-label">Interés Ganado</div>
+                        <div class="stat-change text-success">+${((totalInterest/totalContributed)*100).toFixed(1)}%</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div class="stat-value">${formatMoney(compoundAdvantage)}</div>
+                        <div class="stat-label">Ventaja Compuesto</div>
+                        <div class="stat-change text-success">vs Simple</div>
+                    </div>
+                </div>
+            `;
+            
+            // Crear gráfico
+            createCompoundChart(data);
+            
+            // Generar tabla de proyección
+            document.getElementById('proyeccionTable').innerHTML = generateProjectionTable(data);
+            
+            // Comparación de intereses
+            document.getElementById('comparacionInteres').innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white text-center">
+                                <h6 class="mb-0"><i class="fas fa-trophy me-2"></i>Interés Compuesto</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <h4 class="text-success">${formatMoney(finalValue)}</h4>
+                                <p class="mb-0">Valor final con interés compuesto</p>
+                                <small class="text-muted">El interés genera más interés</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-danger">
+                            <div class="card-header bg-danger text-white text-center">
+                                <h6 class="mb-0"><i class="fas fa-minus-circle me-2"></i>Interés Simple</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <h4 class="text-danger">${formatMoney(simpleInterestValue)}</h4>
+                                <p class="mb-0">Valor con interés simple</p>
+                                <small class="text-muted">Solo sobre el capital inicial</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>¡Increíble!</strong> Con interés compuesto ganas <strong>${formatMoney(compoundAdvantage)}</strong> 
+                    más que con interés simple. Eso es ${((compoundAdvantage/simpleInterestValue)*100).toFixed(1)}% adicional.
+                </div>
+            `;
+            
+            // Mostrar resultados
+            document.getElementById('compoundInterestResult').style.display = 'block';
+            document.getElementById('compoundInterestResult').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Reset form
+        document.getElementById('resetForm').addEventListener('click', function() {
+            document.getElementById('compoundInterestForm').reset();
+            document.getElementById('compoundInterestResult').style.display = 'none';
+            if (compoundChart) {
+                compoundChart.destroy();
+                compoundChart = null;
+            }
+        });
+
+        // Ejemplos predefinidos
+        function loadExample(type) {
+            const examples = {
+                conservative: { inicial: 10000, mensual: 300, anios: 20, tasa: 6 },
+                moderate: { inicial: 5000, mensual: 500, anios: 15, tasa: 8 },
+                aggressive: { inicial: 1000, mensual: 1000, anios: 25, tasa: 12 }
+            };
+            
+            const example = examples[type];
+            if (example) {
+                document.getElementById('ci_inicial').value = example.inicial;
+                document.getElementById('ci_mensual').value = example.mensual;
+                document.getElementById('ci_anios').value = example.anios;
+                document.getElementById('ci_tasa').value = example.tasa;
+            }
+        }
+
+        // Agregar botones de ejemplos
+        const exampleButtons = `
+            <div class="mt-3 text-center">
+                <h6 class="text-muted">Ejemplos rápidos:</h6>
+                <button type="button" class="btn btn-outline-info btn-sm me-2" onclick="loadExample('conservative')">
+                    Conservador (6%)
+                </button>
+                <button type="button" class="btn btn-outline-warning btn-sm me-2" onclick="loadExample('moderate')">
+                    Moderado (8%)
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="loadExample('aggressive')">
+                    Agresivo (12%)
+                </button>
+            </div>
+        `;
+        
+        document.querySelector('#compoundInterestForm').insertAdjacentHTML('beforeend', exampleButtons);
+        
+        // Hacer función global
+        window.loadExample = loadExample;
+    </script>
 </body>
 </html>
