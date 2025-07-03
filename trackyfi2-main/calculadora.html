@@ -2,205 +2,503 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Calculadora de Préstamos</title>
+    <title>Calculadora de Préstamos - Trackerfolio</title>
+    <link rel="icon" href="icono/icono trackerfolios2.png" type="image/png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap y Plotly -->
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background: #f8fafc; }
-        .container { max-width: 900px; margin-top: 40px; }
-        .table-responsive { max-height: 350px; overflow-y: auto; }
-        .plotly-graph-div { background: #fff; border-radius: 12px; }
-        .result-section { display: none; }
-        .fade-in { animation: fadeIn 0.7s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="home.css">
 </head>
 <body>
-<div class="container">
-    <h2 class="mb-4 text-center"><i class="fas fa-calculator"></i> Calculadora de Préstamos</h2>
-    <form id="loanForm" class="row g-3 mb-4 needs-validation" novalidate>
-        <div class="col-md-3">
-            <label for="importe" class="form-label">Importe del préstamo ($)</label>
-            <input type="number" class="form-control" id="importe" required min="1" step="0.01">
-            <div class="invalid-feedback">Ingrese un importe válido.</div>
-        </div>
-        <div class="col-md-3">
-            <label for="interes" class="form-label">Interés anual (%)</label>
-            <input type="number" class="form-control" id="interes" required min="0" step="0.01">
-            <div class="invalid-feedback">Ingrese un interés válido.</div>
-        </div>
-        <div class="col-md-3">
-            <label for="meses" class="form-label">Meses</label>
-            <input type="number" class="form-control" id="meses" required min="1" step="1">
-            <div class="invalid-feedback">Ingrese un número de meses válido.</div>
-        </div>
-        <div class="col-md-3">
-            <label for="tipo" class="form-label">Tipo de préstamo</label>
-            <select class="form-select" id="tipo" required>
-                <option value="personal">Personal</option>
-                <option value="empresa/autónomo">Empresa/Autónomo</option>
-            </select>
-            <div class="invalid-feedback">Seleccione un tipo de préstamo.</div>
-        </div>
-        <div class="col-12 text-end">
-            <button type="submit" class="btn btn-primary">Calcular</button>
-        </div>
-    </form>
-
-    <div id="resultados" class="result-section fade-in">
-        <div id="resumenAnual" class="mb-4"></div>
-        <div id="grafico" class="mb-4"></div>
-        <div id="tablaMensual" class="mb-4"></div>
-        <div id="totalIntereses" class="alert alert-info d-none"></div>
+    <!-- Barra lateral izquierda -->
+    <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-end position-fixed sidebar-custom">
+        <a href="index.html" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+            <span class="fs-4"><i class="fas fa-chart-pie me-2"></i>Trackerfolio</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="home.html" class="nav-link text-dark">
+                    <i class="fas fa-chart-line me-2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="estado.html" class="nav-link text-dark">
+                    <i class="fas fa-balance-scale me-2"></i> Estado Financiero
+                </a>
+            </li>
+            <li>
+                <a href="dividendos.html" class="nav-link text-dark">
+                    <i class="fas fa-coins me-2"></i> Dividendos
+                </a>
+            </li>
+            <li>
+                <a href="interesCompuestos.html" class="nav-link text-dark">
+                    <i class="fas fa-percent me-2"></i> Interés Compuesto
+                </a>
+            </li>
+            <li>
+                <a href="calculadora.html" class="nav-link active" aria-current="page">
+                    <i class="fas fa-calculator me-2"></i> Calculadora
+                </a>
+            </li>
+            <li>
+                <a href="configuracion.html" class="nav-link text-dark">
+                    <i class="fas fa-cog me-2"></i> Configuración
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link text-dark" id="toggleThemeBtn" title="Cambiar modo blanco/negro">
+                    <i class="fas fa-moon me-2"></i> Modo Oscuro
+                </a>
+            </li>
+            <li>
+                <button 
+                    class="btn btn-premium w-100 my-2" 
+                    id="sidebarPremiumBtn" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="right" 
+                    title="Accede a todas las funciones por solo $5">
+                    <i class="fas fa-crown me-2"></i> Trackerfolio Premium
+                </button>
+            </li>
+            <li>
+                <a href="https://t.me/trackerfolio" class="nav-link text-dark" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram me-2"></i> Comunidad
+                </a>
+            </li>
+            <li>
+                <a href="chat.html" class="nav-link text-dark">
+                    <i class="fas fa-comments me-2"></i> Muro Social
+                </a>
+            </li>
+        </ul>
     </div>
-</div>
 
-<script>
-function formatMoney(n) {
-    return "$" + n.toLocaleString("es-ES", {minimumFractionDigits:2, maximumFractionDigits:2});
-}
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="dashboard-container">
+            <div class="container">
+                <!-- Encabezado -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <h2 class="display-6 fw-bold mb-3">
+                            <i class="fas fa-calculator me-2"></i>
+                            Calculadora de Préstamos
+                        </h2>
+                        <p class="lead">Calcula y visualiza la amortización de tu préstamo</p>
+                    </div>
+                </div>
 
-function calcularPrestamo(importe, interesAnual, meses) {
-    const interesMensual = interesAnual / 100 / 12;
-    let cuota;
-    if (interesMensual === 0) {
-        cuota = importe / meses;
-    } else {
-        cuota = importe * interesMensual / (1 - Math.pow(1 + interesMensual, -meses));
-    }
-    let saldo = importe;
-    const datos = [];
-    for (let mes = 1; mes <= meses; mes++) {
-        const interesMes = saldo * interesMensual;
-        const principalMes = cuota - interesMes;
-        saldo -= principalMes;
-        datos.push({
-            "Año": Math.floor((mes - 1) / 12) + 1,
-            "Mes": mes,
-            "Cuota": cuota,
-            "Interés": interesMes,
-            "Principal": principalMes,
-            "Saldo restante": Math.max(saldo, 0)
-        });
-    }
-    return datos;
-}
+                <!-- Formulario de Calculadora -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Datos del Préstamo</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="loanForm" class="row g-3 needs-validation" novalidate>
+                            <div class="col-md-3">
+                                <label for="importe" class="form-label">Importe del préstamo ($)</label>
+                                <input type="number" class="form-control" id="importe" required min="1" step="0.01" placeholder="Ej: 250,000">
+                                <div class="invalid-feedback">Ingrese un importe válido.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="interes" class="form-label">Interés anual (%)</label>
+                                <input type="number" class="form-control" id="interes" required min="0" step="0.01" placeholder="Ej: 5.5">
+                                <div class="invalid-feedback">Ingrese un interés válido.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="meses" class="form-label">Plazo (meses)</label>
+                                <input type="number" class="form-control" id="meses" required min="1" step="1" placeholder="Ej: 360">
+                                <div class="invalid-feedback">Ingrese un número de meses válido.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="tipo" class="form-label">Tipo de préstamo</label>
+                                <select class="form-select" id="tipo" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="hipotecario">Hipotecario</option>
+                                    <option value="vehicular">Vehicular</option>
+                                    <option value="empresa">Empresa/Autónomo</option>
+                                </select>
+                                <div class="invalid-feedback">Seleccione un tipo de préstamo.</div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-calculator me-2"></i>Calcular Préstamo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
-function resumenAnual(datos) {
-    const resumen = {};
-    datos.forEach(row => {
-        const a = row["Año"];
-        if (!resumen[a]) resumen[a] = {Cuota:0, Interés:0, Principal:0};
-        resumen[a].Cuota += row.Cuota;
-        resumen[a].Interés += row["Interés"];
-        resumen[a].Principal += row["Principal"];
-    });
-    return Object.entries(resumen).map(([Año, vals]) => ({
-        Año: +Año,
-        Cuota: vals.Cuota,
-        Interés: vals.Interés,
-        Principal: vals.Principal,
-        "Total pagado": vals.Cuota
-    }));
-}
+                <!-- Resultados -->
+                <div id="resultados" class="result-section" style="display: none;">
+                    <!-- Resumen Financiero -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Resumen Financiero</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="resumenFinanciero">
+                                <!-- Se llena dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
 
-function tablaHTML(datos, campos, titulos) {
-    let html = `<div class="table-responsive"><table class="table table-sm table-bordered align-middle"><thead><tr>`;
-    titulos.forEach(t => html += `<th>${t}</th>`);
-    html += `</tr></thead><tbody>`;
-    datos.forEach(row => {
-        html += "<tr>";
-        campos.forEach(c => {
-            html += `<td>${typeof row[c] === "number" ? formatMoney(row[c]) : row[c]}</td>`;
-        });
-        html += "</tr>";
-    });
-    html += "</tbody></table></div>";
-    return html;
-}
+                    <!-- Gráfico de Amortización (Líneas estilo trading) -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Evolución de la Amortización</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="amortizationChart" height="300"></canvas>
+                        </div>
+                    </div>
 
-// Validación Bootstrap
-(function () {
-    'use strict'
-    var forms = document.querySelectorAll('.needs-validation')
-    Array.prototype.slice.call(forms).forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
+                    <!-- Resumen Anual -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Resumen Anual</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="resumenAnual"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla Mensual -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-table me-2"></i>Tabla de Amortización Mensual</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="tablaMensual"></div>
+                        </div>
+                    </div>
+
+                    <!-- Total de Intereses -->
+                    <div id="totalIntereses" class="alert alert-info d-none">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Aplicar tema guardado
+        window.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                const btn = document.getElementById('toggleThemeBtn');
+                if (btn) {
+                    const icon = btn.querySelector('i');
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    btn.querySelector('span').textContent = 'Modo Claro';
+                }
             }
-            form.classList.add('was-validated')
-        }, false)
-    })
-})();
+        });
 
-document.getElementById("loanForm").onsubmit = function(e) {
-    e.preventDefault();
+        // Toggle tema
+        document.getElementById('toggleThemeBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                this.querySelector('span').textContent = 'Modo Claro';
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                this.querySelector('span').textContent = 'Modo Oscuro';
+            }
+        });
 
-    // Validación manual extra
-    const importe = parseFloat(document.getElementById("importe").value);
-    const interes = parseFloat(document.getElementById("interes").value);
-    const meses = parseInt(document.getElementById("meses").value);
-    const tipo = document.getElementById("tipo").value;
+        let amortizationChart = null;
 
-    if (isNaN(importe) || importe <= 0 ||
-        isNaN(interes) || interes < 0 ||
-        isNaN(meses) || meses < 1 ||
-        !tipo) {
-        return false;
-    }
+        function formatMoney(n) {
+            return "$" + n.toLocaleString("es-ES", {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
 
-    const datos = calcularPrestamo(importe, interes, meses);
-    const resumen = resumenAnual(datos);
+        function calcularPrestamo(importe, interesAnual, meses) {
+            const interesMensual = interesAnual / 100 / 12;
+            let cuota;
+            if (interesMensual === 0) {
+                cuota = importe / meses;
+            } else {
+                cuota = importe * interesMensual / (1 - Math.pow(1 + interesMensual, -meses));
+            }
+            let saldo = importe;
+            const datos = [];
+            for (let mes = 1; mes <= meses; mes++) {
+                const interesMes = saldo * interesMensual;
+                const principalMes = cuota - interesMes;
+                saldo -= principalMes;
+                datos.push({
+                    "Año": Math.floor((mes - 1) / 12) + 1,
+                    "Mes": mes,
+                    "Cuota": cuota,
+                    "Interés": interesMes,
+                    "Principal": principalMes,
+                    "Saldo restante": Math.max(saldo, 0)
+                });
+            }
+            return datos;
+        }
 
-    // Tabla resumen anual
-    document.getElementById("resumenAnual").innerHTML =
-        `<h5>Resumen anual</h5>` +
-        tablaHTML(resumen, ["Año","Cuota","Interés","Principal","Total pagado"],
-            ["Año","Cuota","Interés","Principal","Total pagado"]);
+        function resumenAnual(datos) {
+            const resumen = {};
+            datos.forEach(row => {
+                const a = row["Año"];
+                if (!resumen[a]) resumen[a] = {Cuota:0, Interés:0, Principal:0};
+                resumen[a].Cuota += row.Cuota;
+                resumen[a].Interés += row["Interés"];
+                resumen[a].Principal += row["Principal"];
+            });
+            return Object.entries(resumen).map(([Año, vals]) => ({
+                Año: +Año,
+                Cuota: vals.Cuota,
+                Interés: vals.Interés,
+                Principal: vals.Principal,
+                "Total pagado": vals.Cuota
+            }));
+        }
 
-    // Tabla mensual
-    document.getElementById("tablaMensual").innerHTML =
-        `<h5>Tabla de amortización mensual</h5>` +
-        tablaHTML(datos, ["Mes","Año","Cuota","Interés","Principal","Saldo restante"],
-            ["Mes","Año","Cuota","Interés","Principal","Saldo restante"]);
+        function tablaHTML(datos, campos, titulos) {
+            let html = `<div class="table-responsive"><table class="table table-striped table-hover align-middle"><thead class="table-dark"><tr>`;
+            titulos.forEach(t => html += `<th class="text-center">${t}</th>`);
+            html += `</tr></thead><tbody>`;
+            datos.forEach(row => {
+                html += "<tr>";
+                campos.forEach(c => {
+                    const value = typeof row[c] === "number" ? formatMoney(row[c]) : row[c];
+                    html += `<td class="text-center">${value}</td>`;
+                });
+                html += "</tr>";
+            });
+            html += "</tbody></table></div>";
+            return html;
+        }
 
-    // Total intereses
-    const totalIntereses = datos.reduce((acc, r) => acc + r["Interés"], 0);
-    const totalDiv = document.getElementById("totalIntereses");
-    totalDiv.textContent = `💰 Total pagado en intereses: ${formatMoney(totalIntereses)}`;
-    totalDiv.classList.remove("d-none");
+        function createAmortizationChart(datos) {
+            const ctx = document.getElementById('amortizationChart');
+            if (!ctx) return;
+            
+            if (amortizationChart) {
+                amortizationChart.destroy();
+            }
+            
+            const labels = datos.map(d => `Mes ${d.Mes}`);
+            const saldos = datos.map(d => d["Saldo restante"]);
+            const intereses = datos.map(d => d["Interés"]);
+            const principales = datos.map(d => d["Principal"]);
+            
+            amortizationChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Saldo Restante',
+                        data: saldos,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 1,
+                        borderWidth: 3
+                    }, {
+                        label: 'Pago de Interés',
+                        data: intereses,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 1,
+                        borderWidth: 2
+                    }, {
+                        label: 'Pago de Principal',
+                        data: principales,
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.1,
+                        pointRadius: 1,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatMoney(context.parsed.y)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Período'
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Monto ($)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatMoney(value);
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
 
-    // Gráfico Plotly
-    const tracePrincipal = {
-        x: resumen.map(r => r.Año),
-        y: resumen.map(r => r.Principal),
-        name: "Principal pagado",
-        type: "bar",
-        marker: {color: "green"}
-    };
-    const traceInteres = {
-        x: resumen.map(r => r.Año),
-        y: resumen.map(r => r.Interés),
-        name: "Interés pagado",
-        type: "bar",
-        marker: {color: "orange"}
-    };
-    const layout = {
-        title: "Distribución de pagos por año",
-        barmode: "stack",
-        xaxis: {title: "Año"},
-        yaxis: {title: "Monto pagado ($)"},
-        legend: {title: {text: "Componentes del pago"}}
-    };
-    Plotly.newPlot("grafico", [tracePrincipal, traceInteres], layout, {responsive:true});
+        // Validación Bootstrap
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })();
 
-    // Mostrar resultados
-    document.getElementById("resultados").style.display = "block";
-};
-</script>
+        document.getElementById("loanForm").onsubmit = function(e) {
+            e.preventDefault();
+
+            // Validación manual extra
+            const importe = parseFloat(document.getElementById("importe").value);
+            const interes = parseFloat(document.getElementById("interes").value);
+            const meses = parseInt(document.getElementById("meses").value);
+            const tipo = document.getElementById("tipo").value;
+
+            if (isNaN(importe) || importe <= 0 ||
+                isNaN(interes) || interes < 0 ||
+                isNaN(meses) || meses < 1 ||
+                !tipo) {
+                return false;
+            }
+
+            const datos = calcularPrestamo(importe, interes, meses);
+            const resumen = resumenAnual(datos);
+
+            // Resumen financiero
+            const cuotaMensual = datos[0].Cuota;
+            const totalIntereses = datos.reduce((acc, r) => acc + r["Interés"], 0);
+            const totalPagado = importe + totalIntereses;
+
+            document.getElementById("resumenFinanciero").innerHTML = `
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-value">${formatMoney(cuotaMensual)}</div>
+                        <div class="stat-label">Cuota Mensual</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-value">${formatMoney(totalIntereses)}</div>
+                        <div class="stat-label">Total Intereses</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="stat-value">${formatMoney(totalPagado)}</div>
+                        <div class="stat-label">Total a Pagar</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="stat-value">${Math.floor(meses/12)} años</div>
+                        <div class="stat-label">Plazo</div>
+                    </div>
+                </div>
+            `;
+
+            // Tabla resumen anual
+            document.getElementById("resumenAnual").innerHTML =
+                tablaHTML(resumen, ["Año","Cuota","Interés","Principal","Total pagado"],
+                    ["Año","Cuota Anual","Interés Anual","Principal Anual","Total Pagado"]);
+
+            // Tabla mensual (limitada a primeros 24 meses para mejor rendimiento)
+            const datosMostrar = datos.length > 24 ? datos.slice(0, 24) : datos;
+            document.getElementById("tablaMensual").innerHTML =
+                `<h6 class="mb-3">Primeros ${datosMostrar.length} meses</h6>` +
+                tablaHTML(datosMostrar, ["Mes","Año","Cuota","Interés","Principal","Saldo restante"],
+                    ["Mes","Año","Cuota","Interés","Principal","Saldo Restante"]);
+
+            // Total intereses
+            const totalDiv = document.getElementById("totalIntereses");
+            totalDiv.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Resumen:</strong> Pagarás un total de ${formatMoney(totalIntereses)} en intereses durante ${Math.floor(meses/12)} años.
+                Esto representa el ${((totalIntereses/importe)*100).toFixed(1)}% del monto del préstamo.
+            `;
+            totalDiv.classList.remove("d-none");
+
+            // Crear gráfico de amortización
+            createAmortizationChart(datos);
+
+            // Mostrar resultados
+            document.getElementById("resultados").style.display = "block";
+            document.getElementById("resultados").scrollIntoView({ behavior: 'smooth' });
+        };
+    </script>
 </body>
 </html>
