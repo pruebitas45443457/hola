@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Estado Financiero - Trackerfolio</title>
+    <link rel="icon" href="icono/icono trackerfolios2.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="home.css">
+</head>
+<body>
+    <!-- Barra lateral izquierda -->
+    <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-end position-fixed sidebar-custom">
+        <a href="index.html" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+            <span class="fs-4"><i class="fas fa-chart-pie me-2"></i>Trackerfolio</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="home.html" class="nav-link text-dark">
+                    <i class="fas fa-chart-line me-2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="estado.html" class="nav-link active" aria-current="page">
+                    <i class="fas fa-balance-scale me-2"></i> Estado Financiero
+                </a>
+            </li>
+            <li>
+                <a href="dividendos.html" class="nav-link text-dark">
+                    <i class="fas fa-coins me-2"></i> Dividendos
+                </a>
+            </li>
+            <li>
+                <a href="interesCompuestos.html" class="nav-link text-dark">
+                    <i class="fas fa-percent me-2"></i> Interés Compuesto
+                </a>
+            </li>
+            <li>
+                <a href="calculadora.html" class="nav-link text-dark">
+                    <i class="fas fa-calculator me-2"></i> Calculadora
+                </a>
+            </li>
+            <li>
+                <a href="configuracion.html" class="nav-link text-dark">
+                    <i class="fas fa-cog me-2"></i> Configuración
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link text-dark" id="toggleThemeBtn" title="Cambiar modo blanco/negro">
+                    <i class="fas fa-moon me-2"></i> Modo Oscuro
+                </a>
+            </li>
+            <li>
+                <button 
+                    class="btn btn-premium w-100 my-2" 
+                    id="sidebarPremiumBtn" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="right" 
+                    title="Accede a todas las funciones por solo $5">
+                    <i class="fas fa-crown me-2"></i> Trackerfolio Premium
+                </button>
+            </li>
+            <li>
+                <a href="https://t.me/trackerfolio" class="nav-link text-dark" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram me-2"></i> Comunidad
+                </a>
+            </li>
+            <li>
+                <a href="chat.html" class="nav-link text-dark">
+                    <i class="fas fa-comments me-2"></i> Muro Social
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="dashboard-container">
+            <div class="container">
+                <!-- Alertas -->
+                <div id="alertsContainer"></div>
+
+                <!-- Encabezado mejorado -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <h2 class="display-6 fw-bold mb-3">
+                            <i class="fas fa-balance-scale me-2"></i>
+                            Estado Financiero de <span id="symbolTitle">AAPL</span>
+                        </h2>
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <div class="input-group mb-3">
+                                    <input type="text" id="symbolInput" class="form-control form-control-lg" 
+                                           placeholder="Ingresa el símbolo (Ej: AAPL, MSFT, TSLA)">
+                                    <button class="btn btn-primary btn-lg" onclick="loadFinancials()">
+                                        <i class="fas fa-search me-2"></i>Buscar
+                                    </button>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="viewMode" id="anual" value="anual" checked>
+                                    <label class="btn btn-outline-primary" for="anual">Vista Anual</label>
+                                    
+                                    <input type="radio" class="btn-check" name="viewMode" id="trimestral" value="trimestral">
+                                    <label class="btn btn-outline-primary" for="trimestral">Vista Trimestral</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ratios Financieros Mejorados -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Ratios Financieros</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="ratios" class="row g-3"></div>
+                    </div>
+                </div>
+
+                <!-- Estado de Resultados -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Estado de Resultados</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="incomeTable" class="table-responsive"></div>
+                        <div id="incomeGrowthTable" class="table-responsive mt-4"></div>
+                        <div id="marginsTable" class="table-responsive mt-4"></div>
+                    </div>
+                </div>
+
+                <!-- Balance General -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-building-columns me-2"></i>Balance General</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="balanceTable" class="table-responsive"></div>
+                    </div>
+                </div>
+
+                <!-- Flujo de Caja -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Flujo de Caja</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="cashflowTable" class="table-responsive"></div>
+                    </div>
+                </div>
+
+                <!-- Análisis de Tendencias -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-trending-up me-2"></i>Análisis de Tendencias</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="financialTrendsChart" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Comparación con Industria -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-industry me-2"></i>Comparación con la Industria</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="comparison-metric">
+                                    <div class="metric-name">P/E Ratio</div>
+                                    <div class="metric-comparison">
+                                        <span class="company-value" id="companyPE">--</span>
+                                        <span class="vs-text">vs</span>
+                                        <span class="industry-value" id="industryPE">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="comparison-metric">
+                                    <div class="metric-name">ROE</div>
+                                    <div class="metric-comparison">
+                                        <span class="company-value" id="companyROE">--</span>
+                                        <span class="vs-text">vs</span>
+                                        <span class="industry-value" id="industryROE">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="financiero.js"></script>
+    <script>
+        // Aplicar tema guardado
+        window.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                const btn = document.getElementById('toggleThemeBtn');
+                if (btn) {
+                    const icon = btn.querySelector('i');
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    btn.querySelector('span').textContent = 'Modo Claro';
+                }
+            }
+        });
+
+        // Toggle tema
+        document.getElementById('toggleThemeBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                this.querySelector('span').textContent = 'Modo Claro';
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                this.querySelector('span').textContent = 'Modo Oscuro';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trackerfolio - Dashboard Avanzado</title>
+    <link rel="icon" href="icono/icono trackerfolios2.png" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="home.css">
+</head>
+<body>
+    <!-- Barra lateral izquierda -->
+    <div id="sidebar" class="d-flex flex-column flex-shrink-0 p-3 bg-light border-end position-fixed sidebar-custom">
+        <a href="index.html" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
+            <span class="fs-4"><i class="fas fa-chart-pie me-2"></i>Trackerfolio</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="home.html" class="nav-link active" aria-current="page">
+                    <i class="fas fa-chart-line me-2"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="estado.html" class="nav-link text-dark">
+                    <i class="fas fa-balance-scale me-2"></i> Estado Financiero
+                </a>
+            </li>
+            <li>
+                <a href="dividendos.html" class="nav-link text-dark">
+                    <i class="fas fa-coins me-2"></i> Dividendos
+                </a>
+            </li>
+            <li>
+                <a href="interesCompuestos.html" class="nav-link text-dark">
+                    <i class="fas fa-percent me-2"></i> Interés Compuesto
+                </a>
+            </li>
+            <li>
+                <a href="calculadora.html" class="nav-link text-dark">
+                    <i class="fas fa-calculator me-2"></i> Calculadora
+                </a>
+            </li>
+            <li>
+                <a href="configuracion.html" class="nav-link text-dark">
+                    <i class="fas fa-cog me-2"></i> Configuración
+                </a>
+            </li>
+            <li>
+                <a href="#" class="nav-link text-dark" id="toggleThemeBtn" title="Cambiar modo blanco/negro">
+                    <i class="fas fa-moon me-2"></i> Modo Oscuro
+                </a>
+            </li>
+            <li>
+                <button 
+                    class="btn btn-premium w-100 my-2" 
+                    id="sidebarPremiumBtn" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="right" 
+                    title="Accede a todas las funciones por solo $5">
+                    <i class="fas fa-crown me-2"></i> Trackerfolio Premium
+                </button>
+            </li>
+            <li>
+                <a href="https://t.me/trackerfolio" class="nav-link text-dark" target="_blank" rel="noopener">
+                    <i class="fab fa-telegram me-2"></i> Comunidad
+                </a>
+            </li>
+            <li>
+                <a href="chat.html" class="nav-link text-dark">
+                    <i class="fas fa-comments me-2"></i> Muro Social
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-content">
+        <div class="dashboard-container">
+            <div class="container">
+                <!-- Alertas -->
+                <div id="alertsContainer"></div>
+
+                <!-- Estadísticas Principales Mejoradas -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="stat-value" id="totalValue">$0.00</div>
+                            <div class="stat-label">Valor Total</div>
+                            <div class="stat-change" id="totalValueChange">+0.00%</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="stat-value" id="totalInvestment">$0.00</div>
+                            <div class="stat-label">Inversión Total</div>
+                            <div class="stat-change" id="investmentChange">Capital Inicial</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-value" id="totalProfit">$0.00</div>
+                            <div class="stat-label">Ganancia/Pérdida</div>
+                            <div class="stat-change" id="profitChange">0.00%</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="stat-value" id="totalReturn">0.00%</div>
+                            <div class="stat-label">Rendimiento Total</div>
+                            <div class="stat-change" id="returnChange">vs. Benchmark</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Rendimiento Ponderado Ultra Avanzado -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Rendimiento del Portafolio</h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="chart7d">7D</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="chart30d">30D</button>
+                            <button type="button" class="btn btn-primary btn-sm" id="chart90d">90D</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="chart1y">1A</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <canvas id="portfolioPerformanceChart" height="300"></canvas>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="performance-metrics">
+                                    <h6 class="fw-bold mb-3">Métricas de Rendimiento</h6>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Rendimiento Anualizado:</span>
+                                        <span class="metric-value" id="annualizedReturn">0.00%</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Volatilidad:</span>
+                                        <span class="metric-value" id="volatility">0.00%</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Ratio Sharpe:</span>
+                                        <span class="metric-value" id="sharpeRatio">0.00</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Máximo Drawdown:</span>
+                                        <span class="metric-value" id="maxDrawdown">0.00%</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">Diversificación:</span>
+                                        <span class="metric-value" id="diversificationScore">Baja</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Búsqueda Avanzada de Activos por ISIN -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center cursor-pointer"
+                                 data-bs-toggle="collapse"
+                                 data-bs-target="#advancedSearchContainer"
+                                 aria-controls="advancedSearchContainer">
+                                <i class="fas fa-search me-2"></i>
+                                <span>Búsqueda Avanzada por ISIN</span>
+                                <i class="fas fa-chevron-down ms-auto"></i>
+                            </div>
+                            <div class="collapse" id="advancedSearchContainer">
+                                <div class="card-body">
+                                    <div class="input-group mb-3">
+                                        <input type="text" class="form-control" id="isinSearchInput" 
+                                               placeholder="Ej: US0378331005 (Apple)" 
+                                               autocomplete="off">
+                                        <button class="btn btn-primary" type="button" id="searchByISINBtn">
+                                            <i class="fas fa-search"></i> Buscar
+                                        </button>
+                                    </div>
+                                    <div id="isinSearchResults" class="search-results"></div>
+                                    <div id="isinLoadingSpinner" class="text-center d-none">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Buscando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <!-- Formulario de Agregar Activo Mejorado -->
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center cursor-pointer"
+                                     data-bs-toggle="collapse"
+                                     data-bs-target="#assetFormContainer"
+                                     aria-controls="assetFormContainer">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    <span>Agregar Activo</span>
+                                    <i class="fas fa-chevron-down ms-2"></i>
+                                </div>
+                                <button class="btn btn-warning btn-sm" onclick="showCryptoSelector()">
+                                    <i class="fab fa-bitcoin me-1"></i>Añadir Crypto
+                                </button>
+                            </div>
+                            <div class="collapse" id="assetFormContainer">
+                                <div class="card-body p-0">
+                                    <form id="addAssetForm" class="p-3">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="name" class="form-label">Nombre</label>
+                                                <input type="text" class="form-control" id="name" name="name" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="ticker" class="form-label">Ticker</label>
+                                                <input type="text" class="form-control" id="ticker" name="ticker">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="isin" class="form-label">ISIN</label>
+                                                <input type="text" class="form-control" id="isin" name="isin">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="quantity" class="form-label">Cantidad</label>
+                                                <input type="number" step="0.01" class="form-control" id="quantity" name="quantity" required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="purchase_price" class="form-label">Precio de Compra</label>
+                                            <input type="number" step="0.01" class="form-control" id="purchase_price" name="purchase_price" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="currency" class="form-label">Divisa</label>
+                                            <select class="form-control" id="currency" name="currency">
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                                <option value="COP">COP</option>
+                                                <option value="MXN">MXN</option>
+                                            </select>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-dark mb-2" id="toggleDetailsAsset">+ Más Detalle</button>
+                                        <div id="assetDetails" style="display: none;">
+                                            <div class="mb-3">
+                                                <label for="purchase_date" class="form-label">Fecha de compra</label>
+                                                <input type="date" class="form-control" id="purchase_date" name="purchase_date">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="notes" class="form-label">Notas o Comentarios</label>
+                                                <textarea class="form-control" id="notes" name="notes"></textarea>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="commission" class="form-label">Comisión</label>
+                                                <input type="number" step="0.01" class="form-control" id="commission" name="commission">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="broker" class="form-label">Broker / Plataforma</label>
+                                                <input type="text" class="form-control" id="broker" name="broker">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-custom w-100">
+                                            <i class="fas fa-plus me-2"></i>Agregar Activo
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distribución del Portafolio -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-pie-chart me-2"></i>Distribución por Activo
+                            </div>
+                            <div class="card-body">
+                                <canvas id="assetDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-chart-bar me-2"></i>Distribución por Tipo
+                            </div>
+                            <div class="card-body">
+                                <canvas id="typeDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Portafolio Mejorada -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-table me-2"></i>Mi Portafolio</h5>
+                        <div>
+                            <button class="btn btn-success btn-sm me-2" id="updateAllPricesBtn" title="Actualizar todos los precios">
+                                <i class="fas fa-sync-alt me-1"></i>Actualizar Precios
+                            </button>
+                            <button class="btn btn-info btn-sm" id="exportPortfolioBtn" title="Exportar portafolio">
+                                <i class="fas fa-download me-1"></i>Exportar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="portfolioContent">
+                            <div class="table-responsive">
+                                <table class="table table-striped align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Ticker</th>
+                                            <th>ISIN</th>
+                                            <th>Cantidad</th>
+                                            <th>Precio Compra</th>
+                                            <th>Precio Actual</th>
+                                            <th>Valor</th>
+                                            <th>Peso (%)</th>
+                                            <th>Ganancia/Pérdida</th>
+                                            <th>Dividendos Anuales</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="portfolioTableBody">
+                                        <!-- Las filas se llenan dinámicamente con JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de Dividendos Integrada -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <i class="fas fa-coins me-2"></i>Resumen de Dividendos
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="dividend-stat">
+                                    <div class="dividend-value" id="monthlyDividends">$0.00</div>
+                                    <div class="dividend-label">Dividendos Mensuales</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="dividend-stat">
+                                    <div class="dividend-value" id="annualDividends">$0.00</div>
+                                    <div class="dividend-label">Dividendos Anuales</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="dividend-stat">
+                                    <div class="dividend-value" id="dividendYield">0.00%</div>
+                                    <div class="dividend-label">Yield Promedio</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="dividend-stat">
+                                    <div class="dividend-value" id="nextDividendDate">--</div>
+                                    <div class="dividend-label">Próximo Dividendo</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <canvas id="dividendHistoryChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales -->
+    <div class="modal fade" id="assetDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles del Activo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="assetDetailsModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editAssetModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editAssetForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Activo</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="editAssetModalBody"></div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="home.js"></script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+/* Fondo general */
+body {
+    background: #f8f9fa;
+    color: #18181b;
+    font-family: 'Roboto', Arial, sans-serif;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    min-width: 100vw;
+    max-width: 100vw;
+    /* Quita flex y justify-content */
+    /* display: flex;
+    flex-direction: row;
+    justify-content: flex-end; */
+}
+
+/* Ajusta el contenedor principal para que esté al lado de la barra lateral */
+.container.fade-in {
+    margin-left: 240px !important; /* Igual al ancho de la barra lateral */
+    width: auto;
+    min-width: 6;
+    max-width: 700px;
+    box-sizing: border-box;
+    /* El resto de tus estilos aquí */
+}
+
+/* Si usas .container sin .fade-in, puedes agregar: */
+.container {
+    margin-left: 240px !important;
+    width: auto;
+    min-width: 0;
+    max-width: 900px;
+    box-sizing: border-box;
+}
+
+/* Ajusta el contenido principal para dejar más espacio (más ancho) al container */
+.container.fade-in,
+.container {
+    margin-left: 340px !important;
+    width: auto;
+    min-width: 0;
+    max-width: 1200px; /* Antes 900px, ahora más ancho */
+    box-sizing: border-box;
+}
+
+/* Opcional: Si quieres que el container use casi todo el espacio disponible */
+@media (min-width: 1400px) {
+    .container.fade-in,
+    .container {
+        max-width: 1400px;
+    }
+}
+
+.container {
+    background: #fff;
+    border-radius: 32px;
+    box-shadow: 0 12px 48px 0 #bbb, 0 1.5px 12px 0 #2222;
+    padding: 3rem 2.5rem 2.5rem 2.5rem;
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+    border: 2.5px solid #18181b;
+    position: relative;
+    z-index: 2;
+    width: 100vw;
+    min-width: 100vw;
+    max-width: 100vw;
+    left: 0;
+    transform: none;
+    overflow-x: auto;
+    box-sizing: border-box;
+    /* Alinea el contenido al lado derecho */
+    margin-left: auto;
+    margin-right: 0;
+    transition: box-shadow 0.35s cubic-bezier(.39,.575,.565,1), 
+                transform 0.35s cubic-bezier(.39,.575,.565,1), 
+                border-color 0.25s;
+}
+
+.container:hover {
+    box-shadow: 0 24px 64px 0 #18181b, 0 0 32px #444;
+    transform: scale(1.015) rotate(-1deg);
+    border-color: #444;
+}
+.neon-glow {
+    text-shadow: 0 0 8px #bbb, 0 0 16px #2222, 0 0 32px #bbb;
+}
+h2, h4 {
+    font-family: 'Orbitron', Arial, sans-serif;
+    letter-spacing: 2px;
+    color: #18181b;
+    text-shadow: 0 2px 16px #bbb, 0 0 8px #2222;
+}
+.form-control, .btn-primary {
+    border-radius: 16px;
+    font-size: 1.15rem;
+}
+.btn-primary {
+    background: linear-gradient(90deg, #18181b 0%, #444 100%);
+    color: #fff;
+    border: none;
+    font-weight: bold;
+    box-shadow: 0 2px 16px #bbb, 0 0 8px #2222;
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 1px;
+}
+.btn-primary:hover {
+    transform: scale(1.08) rotate(-2deg);
+    background: linear-gradient(90deg, #444 0%, #18181b 100%);
+    box-shadow: 0 4px 32px #18181b, 0 0 16px #444;
+}
+.ratio-card {
+    min-height: 270px;
+    background: linear-gradient(135deg, #fff 0%, #e5e7eb 100%);
+    color: #18181b;
+    border-radius: 22px;
+    box-shadow: 0 6px 32px 0 #bbb, 0 0 12px #2222;
+    border: 2px solid #18181b;
+    transition: box-shadow 0.25s, transform 0.25s;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+.ratio-card:before {
+    content: "";
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, #0001 0%, transparent 80%);
+    filter: blur(8px);
+    z-index: 0;
+}
+.ratio-card:hover {
+    box-shadow: 0 12px 48px 0 #18181b, 0 0 32px #444;
+    transform: translateY(-8px) scale(1.04) rotate(1deg);
+}
+.ratio-card .card-title {
+    font-size: 1.35rem;
+    font-family: 'Orbitron', Arial, sans-serif;
+    color: #18181b;
+    letter-spacing: 1.5px;
+    text-shadow: 0 0 8px #bbb;
+}
+.ratio-card ul li {
+    font-size: 1.13rem;
+    margin-bottom: 0.5rem;
+    font-family: 'Roboto', Arial, sans-serif;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 4px #bbb;
+}
+.table-financial {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 24px 0 #bbb, 0 0 8px #2222;
+    margin-bottom: 2.5rem;
+    border: 2px solid #18181b;
+}
+.table-financial th {
+    background: linear-gradient(90deg, #18181b 0%, #444 100%);
+    color: #fff;
+    font-size: 1.13rem;
+    border: none;
+    text-align: center;
+    letter-spacing: 1px;
+    text-shadow: 0 0 6px #bbb;
+}
+.table-financial td {
+    background: #f5f5f5;
+    color: #18181b;
+    border: none;
+    text-align: center;
+    font-size: 1.09rem;
+    transition: background 0.2s, color 0.2s;
+}
+.table-financial tr:hover td {
+    background: #18181b;
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 0 0 8px #bbb;
+}
+.spinner-border {
+    color: #18181b !important;
+}
+.alert-danger, .alert-warning, .alert-info {
+    border-radius: 14px;
+    font-size: 1.13rem;
+    box-shadow: 0 0 12px #bbb;
+    background: #fff;
+    color: #18181b;
+    border: 2px solid #18181b;
+}
+/* Animación de entrada */
+.fade-in {
+    animation: fadeInUp 0.9s cubic-bezier(.39,.575,.565,1.000) both;
+}
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(60px) scale(0.98);}
+    100% { opacity: 1; transform: translateY(0) scale(1);}
+}
+/* Animación de fondo flotante */
+.bg-float {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+.bg-float span {
+    position: absolute;
+    display: block;
+    border-radius: 50%;
+    opacity: 0.09;
+    filter: blur(16px);
+    animation: float 12s infinite linear;
+}
+.bg-float .b1 { width: 220px; height: 220px; background: #18181b; left: 10vw; top: 10vh; animation-delay: 0s;}
+.bg-float .b2 { width: 180px; height: 180px; background: #444; left: 70vw; top: 20vh; animation-delay: 2s;}
+.bg-float .b3 { width: 140px; height: 140px; background: #18181b; left: 50vw; top: 70vh; animation-delay: 4s;}
+@keyframes float {
+    0% { transform: translateY(0) scale(1);}
+    50% { transform: translateY(-40px) scale(1.08);}
+    100% { transform: translateY(0) scale(1);}
+}
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 10px;
+    background: #e5e7eb;
+}
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #18181b 0%, #444 100%);
+    border-radius: 8px;
+}
+/* Barra lateral a la izquierda, fija y ordenada */
+.sidebar {
+    background: #fff !important;
+    color: #222 !important;
+    border-right: 1px solid #e0e0e0;
+    min-width: 220px;
+    max-width: 260px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    box-shadow: 2px 0 16px #bbb2;
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+}
+
+.sidebar .nav-link {
+    color: #222 !important;
+    transition: background 0.2s, color 0.2s;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    padding: 0.7rem 1rem;
+    font-size: 1.08rem;
+}
+.sidebar .nav-link.active, .sidebar .nav-link:hover {
+    background: #1a1919 !important;
+    color: #fdfeff !important;
+}
+.sidebar h4 {
+    color: #201e1e;
+    font-family: 'Orbitron', Arial, sans-serif;
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+}
+
+/* Cambia el color del h4 del sidebar a negro */
+nav.sidebar h4.mb-4.text-center {
+    color: #18181b !important;
+}
+
+/* Ajusta el contenido principal para dejar espacio a la barra lateral */
+.container.fade-in {
+    margin-left: 240px !important;
+    /* El valor debe ser igual o mayor al min-width de .sidebar */
+}
+
+/* Responsive para móviles */
+@media (max-width: 900px) {
+    .sidebar {
+        min-width: 120px !important;
+        max-width: 140px;
+        font-size: 0.95em;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+    .container.fade-in,
+    .container {
+        margin-left: 130px !important;
+        max-width: 100vw;
+    }
+}
+@media (max-width: 600px) {
+    .sidebar {
+        position: static;
+        width: 100vw;
+        min-width: 0 !important;
+        max-width: 100vw;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        box-shadow: none;
+        padding: 0.5rem 0 !important;
+    }
+    .container.fade-in {
+        margin-left: 0 !important;
+    }
+}
+
+/* Animación al pasar el cursor solo sobre Balance General y Flujo de Caja, NO Estado de Resultados */
+#balanceTable.table-responsive,
+#cashflowTable.table-responsive,
+#balanceTable .table-financial,
+#cashflowTable .table-financial {
+    transition: box-shadow 0.35s cubic-bezier(.39,.575,.565,1), 
+                transform 0.35s cubic-bezier(.39,.575,.565,1), 
+                border-color 0.25s;
+}
+
+#balanceTable.table-responsive:hover,
+#cashflowTable.table-responsive:hover,
+#balanceTable .table-financial:hover,
+#cashflowTable .table-financial:hover {
+    box-shadow: 0 16px 48px 0 #18181b, 0 0 32px #444;
+    transform: scale(1.018) rotate(-1deg);
+    border-color: #444;
+    z-index: 3;
+}
+
+/* Estado de Resultados SIN animación extra, solo estilo base */
+#incomeTable.table-responsive,
+#incomeTable .table-financial {
+    transition: none;
+    box-shadow: 0 2px 24px 0 #bbb, 0 0 8px #2222;
+    border-color: #18181b;
+    transform: none;
+}
+
+/* Cambia los títulos a fuente 'Montserrat' y el texto normal a 'Lato' */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Montserrat:wght@400;700&display=swap');
+
+/* Títulos con fuente Montserrat */
+h1, h2, h3, h4, h5, h6, .neon-glow, .sidebar h4, nav.sidebar h4.mb-4.text-center {
+    font-family: 'Montserrat', Arial, sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.5px;
+    color: #18181b;
+    text-shadow: 0 2px 16px #bbb, 0 0 8px #2222;
+}
+
+/* Resto del texto con fuente Lato */
+body, p, td, th, .form-control, .btn, .nav-link, .ratio-card ul li {
+    font-family: 'Lato', Arial, sans-serif !important;
+    font-weight: 400 !important;
+}
