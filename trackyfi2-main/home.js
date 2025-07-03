@@ -18,11 +18,11 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // =======================
-// VARIABLES Y CONSTANTES MEJORADAS
+// VARIABLES Y CONSTANTES ULTRA MEJORADAS
 // =======================
 const EOD_API_KEY = "685dbffc6fc317.12238654";
 const OPENFIGI_API_KEY = "f4ae7665-74e9-41e9-bc73-3764b37f2d2d";
-const ALPHA_VANTAGE_API_KEY = "demo"; // Reemplazar con tu API key real
+const ALPHA_VANTAGE_API_KEY = "demo";
 
 let portfolioData = JSON.parse(localStorage.getItem('portfolioData') || '[]');
 let portfolioHistory = JSON.parse(localStorage.getItem('portfolioHistory') || '[]');
@@ -32,7 +32,7 @@ let typeDistributionChart = null;
 let dividendHistoryChart = null;
 
 // =======================
-// UTILIDADES MEJORADAS
+// UTILIDADES ULTRA AVANZADAS
 // =======================
 function formatCurrency(amount, currency = 'USD') {
     return new Intl.NumberFormat('en-US', { 
@@ -68,7 +68,7 @@ function calculatePortfolioMetrics() {
 }
 
 // =======================
-// BÚSQUEDA AVANZADA POR ISIN
+// BÚSQUEDA AVANZADA POR ISIN ULTRA MEJORADA
 // =======================
 async function searchByISIN(isin) {
     const loadingSpinner = document.getElementById('isinLoadingSpinner');
@@ -78,53 +78,62 @@ async function searchByISIN(isin) {
     resultsDiv.innerHTML = '';
 
     try {
-        // Primero buscar en OpenFIGI para obtener información del activo
-        const figiResponse = await fetch("https://api.openfigi.com/v3/mapping", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-OPENFIGI-APIKEY": OPENFIGI_API_KEY
-            },
-            body: JSON.stringify([{ idType: "ID_ISIN", idValue: isin }])
-        });
-
-        const figiData = await figiResponse.json();
+        // Intentar múltiples fuentes de datos
+        let found = false;
         
-        if (figiData && figiData[0] && figiData[0].data && figiData[0].data.length > 0) {
-            const assetInfo = figiData[0].data[0];
-            const ticker = assetInfo.ticker;
+        // 1. Primero intentar OpenFIGI
+        try {
+            const figiResponse = await fetch("https://api.openfigi.com/v3/mapping", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-OPENFIGI-APIKEY": OPENFIGI_API_KEY
+                },
+                body: JSON.stringify([{ idType: "ID_ISIN", idValue: isin }])
+            });
+
+            const figiData = await figiResponse.json();
             
-            // Obtener precio actual
-            const price = await getPriceByTicker_EOD(ticker);
-            
-            // Mostrar resultados
-            resultsDiv.innerHTML = `
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">${assetInfo.name || 'Activo encontrado'}</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p class="mb-1"><strong>Ticker:</strong> ${ticker}</p>
-                                <p class="mb-1"><strong>ISIN:</strong> ${isin}</p>
-                                <p class="mb-1"><strong>Mercado:</strong> ${assetInfo.exchCode || 'N/A'}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p class="mb-1"><strong>Precio Actual:</strong> ${price ? formatCurrency(price) : 'No disponible'}</p>
-                                <p class="mb-1"><strong>Tipo:</strong> ${assetInfo.securityType || 'N/A'}</p>
-                                <p class="mb-1"><strong>Moneda:</strong> ${assetInfo.tradingCurrency || 'USD'}</p>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary btn-sm mt-2" onclick="addAssetFromSearch('${assetInfo.name || ticker}', '${ticker}', '${isin}', ${price || 0}, '${assetInfo.tradingCurrency || 'USD'}')">
-                            <i class="fas fa-plus me-1"></i>Agregar al Portafolio
-                        </button>
-                    </div>
-                </div>
-            `;
-        } else {
+            if (figiData && figiData[0] && figiData[0].data && figiData[0].data.length > 0) {
+                const assetInfo = figiData[0].data[0];
+                const ticker = assetInfo.ticker;
+                
+                // Obtener precio actual
+                const price = await getPriceByTicker_EOD(ticker);
+                
+                displaySearchResult(assetInfo.name || ticker, ticker, isin, price, assetInfo.tradingCurrency || 'USD', 'OpenFIGI');
+                found = true;
+            }
+        } catch (e) {
+            console.log('OpenFIGI failed, trying alternatives...');
+        }
+
+        // 2. Si OpenFIGI falla, intentar con EOD Historical Data
+        if (!found) {
+            try {
+                const eodResponse = await fetch(`https://eodhistoricaldata.com/api/search?api_token=${EOD_API_KEY}&search_term=${isin}&limit=5&fmt=json`);
+                const eodData = await eodResponse.json();
+                
+                if (eodData && eodData.length > 0) {
+                    const assetInfo = eodData[0];
+                    const price = await getPriceByTicker_EOD(assetInfo.Code);
+                    
+                    displaySearchResult(assetInfo.Name || assetInfo.Code, assetInfo.Code, isin, price, 'USD', 'EOD Historical Data');
+                    found = true;
+                }
+            } catch (e) {
+                console.log('EOD failed, trying manual search...');
+            }
+        }
+
+        // 3. Si todo falla, búsqueda manual
+        if (!found) {
             resultsDiv.innerHTML = `
                 <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    No se encontró información para el ISIN: ${isin}
+                    <i class="fas fa-search me-2"></i>
+                    No se encontró información automática para el ISIN: ${isin}
+                    <hr>
+                    <p class="mb-0">Puedes agregar el activo manualmente usando el formulario de abajo.</p>
                 </div>
             `;
         }
@@ -133,12 +142,37 @@ async function searchByISIN(isin) {
         resultsDiv.innerHTML = `
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                Error al buscar el ISIN. Inténtalo de nuevo.
+                Error al buscar el ISIN. Inténtalo de nuevo o agrega el activo manualmente.
             </div>
         `;
     } finally {
         loadingSpinner.classList.add('d-none');
     }
+}
+
+function displaySearchResult(name, ticker, isin, price, currency, source) {
+    const resultsDiv = document.getElementById('isinSearchResults');
+    resultsDiv.innerHTML = `
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">${name}</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Ticker:</strong> ${ticker}</p>
+                        <p class="mb-1"><strong>ISIN:</strong> ${isin}</p>
+                        <p class="mb-1"><strong>Fuente:</strong> ${source}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Precio Actual:</strong> ${price ? formatCurrency(price) : 'No disponible'}</p>
+                        <p class="mb-1"><strong>Moneda:</strong> ${currency}</p>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm mt-2" onclick="addAssetFromSearch('${name}', '${ticker}', '${isin}', ${price || 0}, '${currency}')">
+                    <i class="fas fa-plus me-1"></i>Agregar al Portafolio
+                </button>
+            </div>
+        </div>
+    `;
 }
 
 window.addAssetFromSearch = function(name, ticker, isin, price, currency) {
@@ -158,7 +192,7 @@ window.addAssetFromSearch = function(name, ticker, isin, price, currency) {
 };
 
 // =======================
-// API CALLS MEJORADAS
+// API CALLS ULTRA MEJORADAS
 // =======================
 async function getTickerByISIN_OpenFIGI(isin) {
     const url = "https://api.openfigi.com/v3/mapping";
@@ -202,6 +236,9 @@ async function getPriceByISIN_OpenFIGI_EOD(isin, fallbackTicker = null) {
     return await getPriceByTicker_EOD(ticker);
 }
 
+// =======================
+// FUNCIONES CRYPTO ULTRA AVANZADAS
+// =======================
 async function getCurrentPriceCrypto(cryptoId, currency = 'usd') {
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${cryptoId}&vs_currencies=${currency}`;
     try {
@@ -214,8 +251,57 @@ async function getCurrentPriceCrypto(cryptoId, currency = 'usd') {
     }
 }
 
+async function searchCrypto(query) {
+    const url = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(query)}`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        return data.coins || [];
+    } catch (e) {
+        console.error('Error searching crypto:', e);
+        return [];
+    }
+}
+
+// Función para agregar crypto específico
+window.addCryptoToPortfolio = async function(cryptoId, name, symbol) {
+    try {
+        const price = await getCurrentPriceCrypto(cryptoId);
+        if (price) {
+            document.getElementById('name').value = name;
+            document.getElementById('ticker').value = symbol.toUpperCase();
+            document.getElementById('purchase_price').value = price;
+            document.getElementById('currency').value = 'USD';
+            
+            // Agregar campo oculto para identificar el tipo crypto
+            let cryptoIdField = document.getElementById('crypto_id');
+            if (!cryptoIdField) {
+                cryptoIdField = document.createElement('input');
+                cryptoIdField.type = 'hidden';
+                cryptoIdField.id = 'crypto_id';
+                cryptoIdField.name = 'crypto_id';
+                document.getElementById('addAssetForm').appendChild(cryptoIdField);
+            }
+            cryptoIdField.value = cryptoId;
+            
+            // Mostrar el formulario
+            const formContainer = document.getElementById('assetFormContainer');
+            if (!formContainer.classList.contains('show')) {
+                new bootstrap.Collapse(formContainer).show();
+            }
+            
+            showAlert(`${name} cargado. Precio actual: ${formatCurrency(price)}`, 'success');
+        } else {
+            showAlert('No se pudo obtener el precio de esta criptomoneda', 'warning');
+        }
+    } catch (error) {
+        console.error('Error adding crypto:', error);
+        showAlert('Error al cargar la criptomoneda', 'danger');
+    }
+};
+
 // =======================
-// ACTUALIZACIÓN DE PRECIOS MEJORADA
+// ACTUALIZACIÓN DE PRECIOS ULTRA MEJORADA
 // =======================
 async function updateAllPrices() {
     const updateBtn = document.getElementById('updateAllPricesBtn');
@@ -239,7 +325,7 @@ async function updateAllPrices() {
                     price = await getPriceByTicker_EOD(asset.ticker);
                 }
             } else if (asset.type === "crypto") {
-                const cryptoId = asset.name_id || asset.ticker.toLowerCase();
+                const cryptoId = asset.crypto_id || asset.name_id || asset.ticker.toLowerCase();
                 price = await getCurrentPriceCrypto(cryptoId, (asset.currency || 'usd').toLowerCase());
             }
             
@@ -259,6 +345,9 @@ async function updateAllPrices() {
             console.error(`Error updating price for ${asset.name}:`, error);
             asset.priceError = 'Error al actualizar precio.';
         }
+        
+        // Pequeña pausa para no sobrecargar las APIs
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     // Guardar historial para gráficos de performance
@@ -289,7 +378,7 @@ async function updateAllPrices() {
 }
 
 // =======================
-// GRÁFICO DE RENDIMIENTO PONDERADO ULTRA AVANZADO
+// GRÁFICO DE RENDIMIENTO ESTILO TRADING (LÍNEAS)
 // =======================
 function updatePerformanceChart() {
     const ctx = document.getElementById('portfolioPerformanceChart');
@@ -304,27 +393,30 @@ function updatePerformanceChart() {
     const returns = portfolioHistory.map(h => h.totalReturn);
     
     performanceChart = new Chart(ctx, {
-        type: 'line',
+        type: 'line', // Cambiado a líneas estilo trading
         data: {
             labels: labels,
             datasets: [{
                 label: 'Valor del Portafolio',
                 data: values,
                 borderColor: '#4f46e5',
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 3,
-                pointHoverRadius: 6
+                backgroundColor: 'transparent',
+                fill: false,
+                tension: 0.1, // Líneas más suaves estilo trading
+                pointRadius: 2,
+                pointHoverRadius: 8,
+                borderWidth: 3
             }, {
                 label: 'Rendimiento (%)',
                 data: returns,
                 borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                backgroundColor: 'transparent',
                 fill: false,
-                tension: 0.4,
+                tension: 0.1,
                 yAxisID: 'y1',
-                pointRadius: 2
+                pointRadius: 1,
+                pointHoverRadius: 6,
+                borderWidth: 2
             }]
         },
         options: {
@@ -354,6 +446,9 @@ function updatePerformanceChart() {
                     title: {
                         display: true,
                         text: 'Fecha'
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
                     }
                 },
                 y: {
@@ -368,6 +463,9 @@ function updatePerformanceChart() {
                         callback: function(value) {
                             return formatCurrency(value);
                         }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
                     }
                 },
                 y1: {
@@ -392,6 +490,11 @@ function updatePerformanceChart() {
                 mode: 'nearest',
                 axis: 'x',
                 intersect: false
+            },
+            elements: {
+                point: {
+                    hoverBorderWidth: 3
+                }
             }
         }
     });
@@ -453,7 +556,7 @@ function updatePerformanceMetrics() {
 }
 
 // =======================
-// GRÁFICOS DE DISTRIBUCIÓN
+// GRÁFICOS DE DISTRIBUCIÓN ESTILO LÍNEAS
 // =======================
 function updateDistributionCharts() {
     updateAssetDistributionChart();
@@ -482,7 +585,7 @@ function updateAssetDistributionChart() {
                     '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
                     '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1'
                 ],
-                borderWidth: 2,
+                borderWidth: 3,
                 borderColor: '#ffffff'
             }]
         },
@@ -528,16 +631,21 @@ function updateTypeDistributionChart() {
         (cashValue / totalValue * 100) || 0
     ];
     
+    // Convertir a gráfico de líneas
     typeDistributionChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: ['Acciones', 'Criptomonedas', 'Efectivo'],
             datasets: [{
                 label: 'Distribución por Tipo (%)',
                 data: data,
-                backgroundColor: ['#4f46e5', '#f59e0b', '#10b981'],
-                borderColor: ['#3730a3', '#d97706', '#059669'],
-                borderWidth: 2
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 8,
+                pointHoverRadius: 12,
+                borderWidth: 3
             }]
         },
         options: {
@@ -563,6 +671,14 @@ function updateTypeDistributionChart() {
                         callback: function(value) {
                             return value + '%';
                         }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
                     }
                 }
             }
@@ -571,7 +687,7 @@ function updateTypeDistributionChart() {
 }
 
 // =======================
-// RENDERIZADO DE PORTAFOLIO MEJORADO
+// RENDERIZADO DE PORTAFOLIO ULTRA MEJORADO
 // =======================
 function renderPortfolio() {
     const container = document.getElementById("portfolioContent");
@@ -580,10 +696,17 @@ function renderPortfolio() {
             <div class="empty-portfolio text-center py-5">
                 <i class="fas fa-chart-pie fa-4x text-muted mb-3"></i>
                 <h4>Tu portafolio está vacío</h4>
-                <p class="text-muted">Comienza agregando tus primeros activos usando el buscador ISIN o el formulario de arriba</p>
-                <button class="btn btn-primary" onclick="document.getElementById('isinSearchInput').focus()">
-                    <i class="fas fa-search me-2"></i>Buscar por ISIN
-                </button>
+                <p class="text-muted">Comienza agregando tus primeros activos usando el buscador ISIN o añade criptomonedas</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <button class="btn btn-primary me-2" onclick="document.getElementById('isinSearchInput').focus()">
+                            <i class="fas fa-search me-2"></i>Buscar por ISIN
+                        </button>
+                        <button class="btn btn-warning" onclick="showCryptoSelector()">
+                            <i class="fab fa-bitcoin me-2"></i>Añadir Crypto
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
         updateStats();
@@ -616,7 +739,7 @@ function renderPortfolio() {
     portfolioData.forEach((asset, idx) => {
         const peso = totalValue ? ((asset.value || 0) / totalValue * 100).toFixed(2) : "0.00";
         const ganancia = asset.profit || 0;
-        const dividendosEst = (asset.value || 0) * 0.03; // Estimación 3% anual
+        const dividendosEst = asset.type === 'stock' ? (asset.value || 0) * 0.03 : 0; // Solo para acciones
         
         let gananciaClass = "";
         if (asset.profit !== undefined && asset.profit !== null) {
@@ -632,12 +755,17 @@ function renderPortfolio() {
             priceDisplay += `<br><small class="text-muted">Actualizado: ${lastUpdate}</small>`;
         }
 
+        // Iconos específicos por tipo
+        let iconClass = 'chart-line';
+        if (asset.type === 'crypto') iconClass = 'bitcoin';
+        else if (asset.type === 'cash') iconClass = 'wallet';
+
         html += `
             <tr>
                 <td>
                     <div class="d-flex align-items-center">
                         <div class="asset-icon me-2">
-                            <i class="fas fa-${asset.type === 'crypto' ? 'bitcoin' : asset.type === 'cash' ? 'wallet' : 'chart-line'}"></i>
+                            <i class="fas fa-${iconClass}"></i>
                         </div>
                         <div>
                             <div class="fw-bold">${asset.name || asset.crypto_name || "Efectivo"}</div>
@@ -688,7 +816,171 @@ function renderPortfolio() {
 }
 
 // =======================
-// ESTADÍSTICAS MEJORADAS
+// SELECTOR DE CRIPTOMONEDAS ULTRA AVANZADO
+// =======================
+window.showCryptoSelector = async function() {
+    try {
+        // Mostrar modal de carga
+        const modalHtml = `
+            <div class="modal fade" id="cryptoSelectorModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fab fa-bitcoin me-2"></i>Seleccionar Criptomoneda
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <input type="text" id="cryptoSearchInput" class="form-control" 
+                                       placeholder="Buscar criptomoneda (ej: Bitcoin, Ethereum, BTC)">
+                            </div>
+                            <div id="cryptoResults">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando criptomonedas...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remover modal existente si existe
+        const existingModal = document.getElementById('cryptoSelectorModal');
+        if (existingModal) existingModal.remove();
+        
+        // Agregar nuevo modal
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('cryptoSelectorModal'));
+        modal.show();
+        
+        // Cargar criptomonedas populares
+        loadPopularCryptos();
+        
+        // Configurar búsqueda
+        document.getElementById('cryptoSearchInput').addEventListener('input', debounce(searchCryptos, 500));
+        
+    } catch (error) {
+        console.error('Error showing crypto selector:', error);
+        showAlert('Error al cargar selector de criptomonedas', 'danger');
+    }
+};
+
+async function loadPopularCryptos() {
+    try {
+        const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1');
+        const cryptos = await response.json();
+        
+        displayCryptos(cryptos);
+    } catch (error) {
+        console.error('Error loading popular cryptos:', error);
+        document.getElementById('cryptoResults').innerHTML = `
+            <div class="alert alert-warning">
+                Error al cargar criptomonedas. Por favor, intenta de nuevo.
+            </div>
+        `;
+    }
+}
+
+async function searchCryptos() {
+    const query = document.getElementById('cryptoSearchInput').value.trim();
+    if (!query) {
+        loadPopularCryptos();
+        return;
+    }
+    
+    try {
+        const cryptos = await searchCrypto(query);
+        if (cryptos.length > 0) {
+            // Obtener precios para los primeros 10 resultados
+            const cryptoIds = cryptos.slice(0, 10).map(c => c.id).join(',');
+            const priceResponse = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`);
+            const prices = await priceResponse.json();
+            
+            const cryptosWithPrices = cryptos.slice(0, 10).map(crypto => ({
+                ...crypto,
+                current_price: prices[crypto.id]?.usd || 0,
+                price_change_percentage_24h: prices[crypto.id]?.usd_24h_change || 0
+            }));
+            
+            displayCryptos(cryptosWithPrices);
+        } else {
+            document.getElementById('cryptoResults').innerHTML = `
+                <div class="alert alert-info">
+                    No se encontraron resultados para "${query}"
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error searching cryptos:', error);
+        document.getElementById('cryptoResults').innerHTML = `
+            <div class="alert alert-danger">
+                Error en la búsqueda. Por favor, intenta de nuevo.
+            </div>
+        `;
+    }
+}
+
+function displayCryptos(cryptos) {
+    const resultsDiv = document.getElementById('cryptoResults');
+    let html = '<div class="row">';
+    
+    cryptos.forEach(crypto => {
+        const priceChange = crypto.price_change_percentage_24h || 0;
+        const changeClass = priceChange >= 0 ? 'text-success' : 'text-danger';
+        const changeIcon = priceChange >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+        
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 crypto-card" onclick="addCryptoToPortfolio('${crypto.id}', '${crypto.name}', '${crypto.symbol}')">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <img src="${crypto.image || crypto.large || 'https://via.placeholder.com/40'}" 
+                                 alt="${crypto.name}" class="crypto-logo me-3">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${crypto.name}</h6>
+                                <small class="text-muted">${(crypto.symbol || '').toUpperCase()}</small>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold">${formatCurrency(crypto.current_price || 0)}</div>
+                                <small class="${changeClass}">
+                                    <i class="fas ${changeIcon}"></i>
+                                    ${Math.abs(priceChange).toFixed(2)}%
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    resultsDiv.innerHTML = html;
+}
+
+// Utility function para debounce
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// =======================
+// ESTADÍSTICAS ULTRA MEJORADAS
 // =======================
 function updateStats() {
     const metrics = calculatePortfolioMetrics();
@@ -727,7 +1019,7 @@ function updateStats() {
 }
 
 // =======================
-// FUNCIONES DE ACTIVOS
+// FUNCIONES DE ACTIVOS MEJORADAS
 // =======================
 window.editAsset = function(idx) {
     const asset = portfolioData[idx];
@@ -752,6 +1044,14 @@ window.editAsset = function(idx) {
         <div class="mb-3">
             <label class="form-label">Precio Compra</label>
             <input type="number" step="0.01" class="form-control" name="purchase_price" value="${asset.purchase_price || ''}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Tipo</label>
+            <select class="form-control" name="type">
+                <option value="stock" ${asset.type === 'stock' ? 'selected' : ''}>Acción</option>
+                <option value="crypto" ${asset.type === 'crypto' ? 'selected' : ''}>Criptomoneda</option>
+                <option value="cash" ${asset.type === 'cash' ? 'selected' : ''}>Efectivo</option>
+            </select>
         </div>
         <div class="mb-3">
             <label class="form-label">Divisa</label>
@@ -857,7 +1157,7 @@ window.viewDetails = function(idx) {
 };
 
 // =======================
-// EVENT LISTENERS
+// EVENT LISTENERS ULTRA MEJORADOS
 // =======================
 
 // Búsqueda por ISIN
@@ -876,10 +1176,14 @@ document.getElementById('isinSearchInput').addEventListener('keypress', function
     }
 });
 
-// Agregar activo
+// Agregar activo ultra mejorado
 document.getElementById("addAssetForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     const form = e.target;
+    
+    const cryptoIdField = document.getElementById('crypto_id');
+    const assetType = cryptoIdField && cryptoIdField.value ? 'crypto' : 'stock';
+    
     const asset = {
         name: form.name.value,
         ticker: form.ticker.value,
@@ -891,18 +1195,30 @@ document.getElementById("addAssetForm").addEventListener("submit", async functio
         notes: form.notes.value,
         broker: form.broker.value,
         purchase_date: form.purchase_date.value,
-        type: "stock",
+        type: assetType,
         dateAdded: new Date().toISOString()
     };
     
+    if (assetType === 'crypto' && cryptoIdField) {
+        asset.crypto_id = cryptoIdField.value;
+        asset.name_id = cryptoIdField.value;
+    }
+    
     portfolioData.push(asset);
     localStorage.setItem('portfolioData', JSON.stringify(portfolioData));
-    form.reset();
     
-    // Actualizar precio inmediatamente
-    await actualizarPrecioIndividual(asset);
+    // Limpiar formulario y crypto_id
+    form.reset();
+    if (cryptoIdField) cryptoIdField.remove();
+    
+    // Cerrar modal de crypto si está abierto
+    const cryptoModal = document.getElementById('cryptoSelectorModal');
+    if (cryptoModal) {
+        bootstrap.Modal.getInstance(cryptoModal).hide();
+    }
+    
     renderPortfolio();
-    showAlert("Activo agregado correctamente", "success");
+    showAlert(`${asset.name} agregado al portafolio correctamente`, "success");
 });
 
 // Editar activo
@@ -910,61 +1226,95 @@ document.getElementById('editAssetForm').addEventListener('submit', function(e) 
     e.preventDefault();
     const form = e.target;
     const idx = parseInt(form.idx.value);
-    const asset = portfolioData[idx];
     
-    asset.name = form.name.value;
-    asset.crypto_name = form.name.value;
-    asset.ticker = form.ticker.value;
-    asset.isin = form.isin.value;
-    asset.quantity = parseFloat(form.quantity.value) || asset.quantity || asset.amount;
-    asset.amount = asset.quantity;
-    asset.purchase_price = parseFloat(form.purchase_price.value) || asset.purchase_price;
-    asset.currency = form.currency.value;
-    asset.notes = form.notes.value;
-    asset.lastModified = new Date().toISOString();
+    portfolioData[idx] = {
+        ...portfolioData[idx],
+        name: form.name.value,
+        ticker: form.ticker.value,
+        isin: form.isin.value,
+        quantity: parseFloat(form.quantity.value),
+        purchase_price: parseFloat(form.purchase_price.value),
+        type: form.type.value,
+        currency: form.currency.value,
+        notes: form.notes.value
+    };
     
     localStorage.setItem('portfolioData', JSON.stringify(portfolioData));
-    renderPortfolio();
     bootstrap.Modal.getInstance(document.getElementById('editAssetModal')).hide();
-    showAlert("Activo modificado correctamente", "success");
+    renderPortfolio();
+    showAlert("Activo actualizado correctamente", "success");
 });
 
-// Actualizar todos los precios
-document.getElementById("updateAllPricesBtn").addEventListener("click", updateAllPrices);
+// Actualizar precios
+document.getElementById('updateAllPricesBtn').addEventListener('click', updateAllPrices);
+
+// Botones de período del gráfico
+document.getElementById('chart7d').addEventListener('click', () => filterPortfolioHistory(7));
+document.getElementById('chart30d').addEventListener('click', () => filterPortfolioHistory(30));
+document.getElementById('chart90d').addEventListener('click', () => filterPortfolioHistory(90));
+document.getElementById('chart1y').addEventListener('click', () => filterPortfolioHistory(365));
+
+function filterPortfolioHistory(days) {
+    // Actualizar botones activos
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-primary');
+    });
+    
+    if (days === 7) document.getElementById('chart7d').classList.add('btn-primary');
+    else if (days === 30) document.getElementById('chart30d').classList.add('btn-primary');
+    else if (days === 90) document.getElementById('chart90d').classList.add('btn-primary');
+    else if (days === 365) document.getElementById('chart1y').classList.add('btn-primary');
+    
+    // Filtrar datos y actualizar gráfico
+    const filteredHistory = portfolioHistory.slice(-days);
+    const originalHistory = portfolioHistory;
+    portfolioHistory = filteredHistory;
+    updatePerformanceChart();
+    portfolioHistory = originalHistory;
+}
 
 // Exportar portafolio
-document.getElementById("exportPortfolioBtn").addEventListener("click", function() {
-    const dataStr = JSON.stringify(portfolioData, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `portfolio_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
+document.getElementById('exportPortfolioBtn').addEventListener('click', function() {
+    const data = {
+        portfolio: portfolioData,
+        history: portfolioHistory,
+        exported: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trackerfolio-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
     URL.revokeObjectURL(url);
-    showAlert("Portafolio exportado correctamente", "success");
+    
+    showAlert('Portafolio exportado correctamente', 'success');
 });
 
-// Toggle detalles del formulario
+// Toggle más detalles
 document.getElementById('toggleDetailsAsset').addEventListener('click', function() {
     const details = document.getElementById('assetDetails');
     if (details.style.display === 'none') {
         details.style.display = 'block';
-        this.textContent = '- Menos Detalle';
+        this.innerHTML = '- Menos Detalle';
     } else {
         details.style.display = 'none';
-        this.textContent = '+ Más Detalle';
+        this.innerHTML = '+ Más Detalle';
     }
 });
 
 // Modo oscuro
-document.getElementById('toggleThemeBtn').addEventListener('click', function (e) {
+document.getElementById('toggleThemeBtn').addEventListener('click', function(e) {
     e.preventDefault();
     document.body.classList.toggle('dark-mode');
-    localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    const theme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
     
     const icon = this.querySelector('i');
     const span = this.querySelector('span') || this;
+    
     if (document.body.classList.contains('dark-mode')) {
         icon.classList.remove('fa-moon');
         icon.classList.add('fa-sun');
@@ -993,45 +1343,42 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // =======================
-// FUNCIÓN AUXILIAR PARA ACTUALIZAR PRECIO INDIVIDUAL
+// CSS DINÁMICO PARA CRYPTO CARDS
 // =======================
-async function actualizarPrecioIndividual(asset) {
-    let price = null;
-    try {
-        if (asset.type === "stock") {
-            if (asset.isin && asset.isin.trim() !== "") {
-                price = await getPriceByISIN_OpenFIGI_EOD(asset.isin, asset.ticker);
-            }
-            if ((price === null || price === undefined) && asset.ticker) {
-                price = await getPriceByTicker_EOD(asset.ticker);
-            }
-        } else if (asset.type === "crypto") {
-            const cryptoId = asset.name_id || asset.ticker.toLowerCase();
-            price = await getCurrentPriceCrypto(cryptoId, (asset.currency || 'usd').toLowerCase());
-        }
-        
-        if (price !== null && price !== undefined) {
-            asset.current_price = price;
-            asset.value = (asset.quantity || asset.amount) * price;
-            asset.profit = asset.value - ((asset.quantity || asset.amount) * (asset.purchase_price || 0)) - (asset.commission || 0);
-            asset.priceError = null;
-            asset.lastUpdated = new Date().toISOString();
-        } else {
-            asset.current_price = null;
-            asset.value = null;
-            asset.profit = null;
-            asset.priceError = 'No se pudo obtener el precio.';
-        }
-    } catch (error) {
-        console.error('Error updating individual price:', error);
-        asset.priceError = 'Error al actualizar precio.';
+const cryptoStyles = document.createElement('style');
+cryptoStyles.textContent = `
+    .crypto-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
     }
-    
-    localStorage.setItem('portfolioData', JSON.stringify(portfolioData));
-}
+    .crypto-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border-color: var(--primary-color);
+    }
+    .crypto-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+    #cryptoSelectorModal .modal-dialog {
+        max-width: 800px;
+    }
+`;
+document.head.appendChild(cryptoStyles);
 
 // =======================
-// INICIALIZACIÓN
+// INICIALIZACIÓN ULTRA AVANZADA
 // =======================
 renderPortfolio();
 updatePerformanceChart();
+
+// Auto-actualizar precios cada 5 minutos
+setInterval(() => {
+    if (portfolioData.length > 0) {
+        updateAllPrices();
+    }
+}, 5 * 60 * 1000);
+
+console.log('TrackyFi Ultra Advanced Portfolio Manager v2.0 iniciado correctamente! 🚀');
