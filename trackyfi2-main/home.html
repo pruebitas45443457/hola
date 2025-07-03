@@ -211,13 +211,18 @@
                     <div class="col-md-6">
                         <!-- Formulario de Agregar Activo Mejorado -->
                         <div class="card">
-                            <div class="card-header d-flex align-items-center cursor-pointer"
-                                 data-bs-toggle="collapse"
-                                 data-bs-target="#assetFormContainer"
-                                 aria-controls="assetFormContainer">
-                                <i class="fas fa-plus-circle me-2"></i>
-                                <span>Agregar Activo</span>
-                                <i class="fas fa-chevron-down ms-auto"></i>
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center cursor-pointer"
+                                     data-bs-toggle="collapse"
+                                     data-bs-target="#assetFormContainer"
+                                     aria-controls="assetFormContainer">
+                                    <i class="fas fa-plus-circle me-2"></i>
+                                    <span>Agregar Activo</span>
+                                    <i class="fas fa-chevron-down ms-2"></i>
+                                </div>
+                                <button class="btn btn-warning btn-sm" onclick="showCryptoSelector()">
+                                    <i class="fab fa-bitcoin me-1"></i>Añadir Crypto
+                                </button>
                             </div>
                             <div class="collapse" id="assetFormContainer">
                                 <div class="card-body p-0">
